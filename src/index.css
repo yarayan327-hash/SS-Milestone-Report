@@ -1,0 +1,46 @@
+/* src/index.css */
+/* Base + 51Talk-KSA theme tokens */
+
+:root{
+  --primary-blue:#26B7FF;
+  --accent-yellow:#FDE700;
+  --text-primary:#333333;
+  --text-secondary:#666666;
+  --text-white:#FFFFFF;
+  --bg-primary:#FFFFFF;
+  --bg-secondary:#F6F6F6;
+
+  --radius-lg:22px;
+  --radius-md:16px;
+
+  --shadow: 0 10px 30px rgba(0,0,0,.06);
+  --border: 1px solid rgba(0,0,0,.06);
+}
+
+*{ box-sizing:border-box; }
+html, body { height:100%; }
+
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC", "Noto Sans CJK SC", "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color:var(--text-primary);
+  background:var(--bg-secondary);
+}
+
+a{ color:var(--primary-blue); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+button, input{
+  font-family:inherit;
+}
+
+pre{
+  margin:0;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+table{
+  border-collapse:collapse;
+  width:100%;
+}
