@@ -19,13 +19,13 @@
   "devDependencies": {
     "typescript": "^5",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "@tailwindcss/typography": "^0.5.10",
-    "babel-plugin-react-compiler": "^19.0.0-beta-2771437-20241203",
+    "@tailwindcss/typography": "^0.5.15",
+    "babel-plugin-react-compiler": "19.0.0-beta-2771437-20241203",
     "eslint": "^9",
     "eslint-config-next": "latest"
   }
