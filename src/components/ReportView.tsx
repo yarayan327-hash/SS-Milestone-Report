@@ -9,11 +9,11 @@ import {
 
 export default function ReportView({ student }: { student: any }) {
   const [lang, setLang] = useState<'en' | 'ar'>('en');
-  const [activeModule, setActiveModule] = useState<number | null>(null); // 修复按钮点击
+  const [activeModule, setActiveModule] = useState<number | null>(null);
   const [showFullGap, setShowFullGap] = useState(false);
   const isRtl = lang === 'ar';
 
-  // --- 1. 严格复刻自模板的结构化数据对象 ---
+  // --- 严格复刻自模板的结构化数据，修复缺失属性 ---
   const reportData = {
     executiveSummary: {
       en: "Congratulations on your fantastic progress during your first year of high school! 🎉 Continuing your studies consistently all the way to Ramadan shows the mindset of a highly successful student. You have transitioned beautifully from giving one-word answers to building full, impressive sentences. Your teacher is incredibly proud of your natural language intuition (إحساس)!",
@@ -37,22 +37,28 @@ export default function ReportView({ student }: { student: any }) {
       }
     ],
     gapAnalysis: {
+      title: { en: "The 'Gap' Analysis", ar: "تحليل الفجوة" },
+      description: { 
+        en: "While your intuition is great, our deep analysis shows specific 'Gaps' that are holding you back. If you pause now, your brain will revert to translation habits.",
+        ar: "في حين أن حدسك اللغوي رائع، يظهر تحليلنا العميق 'فجوات' محددة تعيق تقدمك. إذا توقفت الآن، سيعود عقلك إلى عادات الترجمة."
+      },
       points: [
         {
           title: { en: "Phonics & Pronunciation Trap", ar: "فخ النطق والصوتيات" },
-          description: { en: "Struggling with vowel sounds and pronouncing silent letters.", ar: "صعوبة في أصوات الحروف المتحركة ونطق الحروف الصامتة." }
+          description: { en: "Struggling with vowel sounds and pronouncing silent letters like 'K' in know.", ar: "صعوبة في أصوات الحروف المتحركة ونطق الحروف الصامتة مثل حرف 'K' في كلمة know." }
         },
         {
           title: { en: "The 'I Read But Don't Understand' Gap", ar: "فجوة 'أقرأ ولكن لا أفهم'" },
-          description: { en: "Decoding word-by-word instead of understanding context.", ar: "فك التشفير كلمة بكلمة بدلاً من فهم السياق." }
+          description: { en: "Decoding word-by-word instead of understanding context, forgetting the beginning of sentences.", ar: "فك التشفير كلمة بكلمة بدلاً من فهم السياق، مما يؤدي لنسيان بداية الجمل." }
         },
         {
           title: { en: "Arabic Literal Translation", ar: "الترجمة الحرفية العربية" },
-          description: { en: "Building sentences in Arabic first, causing 'Be' verb drops.", ar: "بناء الجمل بالعربية أولاً، مما يسبب سقوط فعل الكينونة." }
+          description: { en: "Building sentences in Arabic first, causing 'Be' verb drops and slowing flow.", ar: "بناء الجمل بالعربية أولاً، مما يسبب سقوط فعل الكينونة ويقلل من سلاقة المحادثة." }
         }
       ]
     },
     roadmap: {
+      title: { en: "Custom Learning Roadmap", ar: "خارطة الطريق التعليمية المخصصة" }, // 修复此处缺失的 title
       phases: [
         {
           name: { en: "Phase 1: Foundation Repair", ar: "المرحلة الأولى: إصلاح التأسيس" },
@@ -100,7 +106,7 @@ export default function ReportView({ student }: { student: any }) {
 
       <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
         
-        {/* Hero Section - 修正内容错位 */}
+        {/* Hero Section */}
         <section className="text-center space-y-8">
           <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold tracking-widest uppercase text-[#333333]">LEARNING MILESTONE REPORT</div>
           <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] leading-tight">
@@ -115,7 +121,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* Transformation Section - 移除 <br> 污染 */}
+        {/* Transformation Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]"><TrendingUp size={24} /></div>
@@ -141,32 +147,35 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* Gap Analysis - 修复详情展示 */}
+        {/* Gap Analysis Section */}
         <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full opacity-50" />
           <div className="relative z-10 space-y-16">
             <div className="flex justify-between items-end gap-6 text-start">
               <div className="space-y-4 max-w-2xl">
-                <div className="flex items-center gap-4 text-[#FDE700]"><AlertCircle size={36} /><h2 className="text-3xl md:text-4xl font-bold">{isRtl ? 'تحليل الفجوة' : "The 'Gap' Analysis"}</h2></div>
-                <p className="text-white/60 text-lg md:text-xl font-medium leading-relaxed opacity-80">{isRtl ? 'يظهر تحليلنا العميق فجوات محددة تعيق تقدمك.' : "While your intuition is great, our deep analysis shows specific 'Gaps' that are holding you back."}</p>
+                <div className="flex items-center gap-4 text-[#FDE700]"><AlertCircle size={36} /><h2 className="text-3xl md:text-4xl font-bold">{t(reportData.gapAnalysis.title)}</h2></div>
+                <p className="text-white/60 text-lg md:text-xl font-medium leading-relaxed opacity-80">{t(reportData.gapAnalysis.description)}</p>
               </div>
-              <button onClick={() => setShowFullGap(!showFullGap)} className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full text-sm font-bold transition-all border border-white/10 shrink-0">
+              {/* 修复点：激活展示详情按钮 */}
+              <button onClick={() => setShowFullGap(!showFullGap)} className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full text-sm font-bold transition-all border border-white/10 shrink-0">
                 {showFullGap ? (isRtl ? 'عرض أقل' : 'Show Less') : (isRtl ? 'عرض التفاصيل' : 'View Details')}
               </button>
             </div>
-            <div className={`grid grid-cols-1 md:grid-cols-3 gap-12 text-start`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-12 text-start transition-all duration-500`}>
               {reportData.gapAnalysis.points.map((point, idx) => (
-                <div key={idx} className="space-y-6 group">
+                <div key={idx} className={`space-y-6 group transition-all duration-500 ${!showFullGap && idx > 2 ? 'hidden' : 'block'}`}>
                   <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center font-bold text-[#FDE700] text-xl">0{idx + 1}</div>
                   <h3 className="text-xl font-bold text-white uppercase tracking-wide">{t(point.title)}</h3>
-                  {(showFullGap || window.innerWidth > 768) && <p className="text-white/50 text-sm leading-relaxed animate-in fade-in slide-in-from-top-2">{t(point.description)}</p>}
+                  {/* 状态控制详情内容的展示 */}
+                  {showFullGap && <p className="text-white/50 text-sm leading-relaxed opacity-100">{t(point.description)}</p>}
+                  <div className="h-0.5 w-12 bg-[#FDE700]/30 group-hover:w-full transition-all duration-700" />
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Roadmap - 修复按钮点击 */}
+        {/* Roadmap Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner"><Map size={24} /></div>
@@ -183,8 +192,9 @@ export default function ReportView({ student }: { student: any }) {
                   <div className="w-6 h-6 bg-[#26B7FF]/10 rounded-full flex items-center justify-center shrink-0 mt-1"><CheckCircle2 className="text-[#26B7FF]" size={16} /></div>
                   <p className="text-[#666666] text-lg leading-relaxed italic opacity-80">{t(p.why)}</p>
                 </div>
+                {/* 修复点：激活 Module Details 按钮点击态 */}
                 <button 
-                  onClick={() => setActiveModule(idx)} 
+                  onClick={() => setActiveModule(activeModule === idx ? null : idx)} 
                   className={`w-full py-4 rounded-full border-2 transition-all flex items-center justify-center gap-3 font-bold ${activeModule === idx ? 'bg-[#26B7FF] text-white border-[#26B7FF]' : 'border-[#26B7FF] text-[#26B7FF] hover:bg-[#26B7FF] hover:text-white'}`}
                 >
                    {isRtl ? 'تفاصيل الوحدة' : 'Module Details'}
@@ -206,6 +216,10 @@ export default function ReportView({ student }: { student: any }) {
         </section>
 
       </main>
+
+      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase font-sans">
+        © 2026 MilestoneReport. All Rights Reserved.
+      </footer>
     </div>
   );
 }
