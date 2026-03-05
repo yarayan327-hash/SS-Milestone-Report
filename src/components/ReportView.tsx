@@ -1,34 +1,210 @@
-[SUMMARY]
-Dear Ashwaq,
-Congratulations on an incredible learning journey! 🎉 From the holy month of Ramadan to your busy exam periods, your dedication has been truly inspiring. You have evolved from a shy student who answered with single words into a confident learner who can build complete sentences and write formal emails. As your teacher proudly said: "You used to be shy, now you are much stronger!" You are no longer just memorizing words; you are understanding how English works. This report highlights your amazing transformation and outlines the exact steps we need to take to overcome your remaining hurdles.
-عزيزتي أشواق، تهانينا على رحلة التعلم المذهلة هذه! 🎉 من شهر رمضان المبارك إلى فترات امتحاناتك المزدحمة، كان تفانيك ملهماً حقاً. لقد تطورتِ من طالبة خجولة تجيب بكلمات مفردة إلى متعلمة واثقة يمكنها بناء جمل كاملة وكتابة رسائل بريد إلكتروني رسمية. وكما قال معلمك بكل فخر: "كنتِ خجولة في الماضي، أما الآن فأنتِ أقوى بكثير!" أنتِ لم تعودي مجرد تحفظين الكلمات؛ بل تفهمين كيف تعمل اللغة الإنجليزية. يسلط هذا التقرير الضوء على تحولك المذهل ويحدد الخطوات الدقيقة التي نحتاج إلى اتخاذها للتغلب على العقبات المتبقية.
+"use client";
 
-[TRANSFORMATION]
-Category: Vocabulary
-Before: Basic & Simple | "Park", "Two" / مفردات أساسية وبسيطة
-After: Advanced & Practical | "Reservation", "Departure", "Generous", "Arrogant" / مفردات متقدمة وعملية
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { 
+  ArrowLeft, Trophy, TrendingUp, Sparkles, Languages, 
+  AlertCircle, Map, ChevronRight, CheckCircle2 
+} from 'lucide-react';
 
-Category: Sentence Structure
-Before: Single words & Broken grammar | "we learning" / كلمات مفردة وقواعد مكسورة
-After: Complete SVO & Polite Requests | "We are learning", "Could you pass the salt to me?" / جمل كاملة وطلبات مهذبة
+export default function ReportView({ student }: { student: any }) {
+  const [lang, setLang] = useState<'en' | 'ar'>('en');
+  const [showFullGap, setShowFullGap] = useState(false);
+  const isRtl = lang === 'ar';
 
-Category: Pronunciation
-Before: P vs. B Confusion | Mispronouncing "Playground" / الخلط بين حرفي P و B
-After: Clear & Accurate | Correct aspiration for /p/ in "Parents" / نطق دقيق وواضح
+  const reportData = useMemo(() => {
+    const raw = student?.reportContent || "";
+    const content = raw.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
 
-Category: Confidence
-Before: Extremely shy | "Squeezing my brain" / خجولة جداً
-After: Self-Correcting & Growing | Actively watching English videos to improve! / تصحيح ذاتي وثقة متزايدة
+    const extract = (tag: string) => {
+      const regex = new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`, 'i');
+      return content.match(regex)?.[1]?.trim() || "";
+    };
 
-[GAP]
-01 | THE PREPOSITION CONFUSION | You are still mixing up time and place layers, saying "on the park" instead of "in the park". / ارتباك أحرف الجر: لا تزالين تخلطين بين طبقات الزمان والمكان.
-02 | THE COUNTABLE/UNCOUNTABLE TRAP | You occasionally add 's' to uncountable nouns ("moneys") and struggle with Much/Many in real-time. / فخ المعدود وغير المعدود: تضيفين حرف 's' للأسماء غير المعدودة وتعانين في اختيار الكميات.
-03 | MULTI-SYLLABLE PHONICS & TRANSLATION | You freeze on long words and translate everything to Arabic, severely slowing your speaking speed. / الصوتيات والترجمة: تتجمدين عند الكلمات الطويلة وتترجمين كل شيء للعربية مما يبطئ سرعتك بشدة.
+    // 1. Summary: 寻找阿拉伯语关键字切割，修复语言混合
+    const summaryRaw = extract("SUMMARY");
+    const arIndex = summaryRaw.search(/عزيزي/);
+    const summary = arIndex !== -1 
+      ? (isRtl ? summaryRaw.substring(arIndex) : summaryRaw.substring(0, arIndex))
+      : summaryRaw;
 
-[ROADMAP]
-Phase 1 | FOUNDATION REPAIR (Sessions 1-8) | [A0/A1] Language Foundation & Grammar Upgrade | Revisiting Phonics and Plural Rules to stop freezing on long words and permanently fix the "moneys" mistake. / التأسيس اللغوي وترقية القواعد: مراجعة الصوتيات وقواعد الجمع لمنع التردد عند نطق الكلمات الطويلة وعلاج أخطاء المعدود.
-Phase 2 | LEVEL UP (Sessions 9-16) | [A2] Deep Scenario Handling | Puts new vocabulary into high-speed practice for hotel & airport role-plays to stop mental translation. / التعامل مع السيناريوهات العميقة: ممارسة سريعة للمفردات الجديدة في سيناريوهات الفنادق والمطارات لإيقاف الترجمة العقلية وبناء سرعة البديهة.
+    // 2. Transformation: 匹配类别和案例
+    const transformation = extract("TRANSFORMATION").split(/Category:/i).filter(Boolean).map((block) => {
+      const lines = block.trim().split('\n').map(l => l.trim());
+      const beforeLine = lines.find(l => l.startsWith('Before:')) || "";
+      const afterLine = lines.find(l => l.startsWith('After:')) || "";
+      const bParts = beforeLine.replace('Before:', '').split('|').map(s => s.trim());
+      const aParts = afterLine.replace('After:', '').split('|').map(s => s.trim());
+      return {
+        category: lines[0] || "Learning",
+        beforeTitle: bParts[0] || "",
+        beforeSub: bParts[1] || "",
+        afterTitle: aParts[0] || "",
+        afterSub: aParts[1] || "",
+      };
+    });
 
-[ENCOURAGEMENT]
-Ashwaq, making mistakes is the only way we learn (كلنا بنغلط - We all make mistakes!). Please keep your notebook close, stop being afraid, and let's unlock your true fluency. You are so close to thinking completely in English. Let's finish what we started!
-أشواق، ارتكاب الأخطاء هو الطريقة الوحيدة للتعلم (كلنا بنغلط). يرجى إبقاء دفتر ملاحظاتك قريباً، والتوقف عن الخوف، ودعينا نطلق العنان لطلاقتك الحقيقية. أنتِ قريبة جداً من التفكير باللغة الإنجليزية بالكامل. دعينا ننهي ما بدأناه!
+    // 3. Gap: 提取 01/02/03
+    const gaps = extract("GAP").split('\n').filter(l => l.includes('|')).map(line => {
+      const p = line.split('|').map(s => s.trim());
+      return { id: p[0], title: p[1], desc: p[2] };
+    });
+
+    // 4. Roadmap: 修复内容缺失，严格映射四个字段
+    const phases = extract("ROADMAP").split('\n').filter(l => l.includes('|')).map(line => {
+      const p = line.split('|').map(s => s.trim());
+      return { 
+        phaseNum: p[0] || "", 
+        phaseName: p[1] || "", 
+        moduleName: p[2] || "", 
+        whyDesc: p[3] || "" 
+      };
+    });
+
+    // 5. Encouragement: 语言隔离
+    const encRaw = extract("ENCOURAGEMENT");
+    const encArIdx = encRaw.search(/زياد|عزيزي/);
+    const encouragement = encArIdx !== -1 
+      ? (isRtl ? encRaw.substring(encArIdx) : encRaw.substring(0, encArIdx))
+      : encRaw;
+
+    return { summary, transformation, gaps, phases, encouragement };
+  }, [student?.reportContent, isRtl]);
+
+  const t = (en: string, ar: string) => isRtl ? ar : en;
+
+  return (
+    <div className={`min-h-screen bg-[#F6F6F6] ${isRtl ? 'rtl text-right font-arabic' : 'text-left font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5 h-20 flex items-center">
+        <div className="max-w-[1140px] mx-auto px-6 w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="p-2 hover:bg-gray-100 rounded-full">
+              <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
+            </Link>
+            <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
+              <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg"><Trophy size={24} /></div>
+              <span className="font-bold text-xl text-[#333333]">Milestone<span className="text-[#26B7FF]">Report</span></span>
+            </div>
+          </div>
+          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:scale-105 transition-all">
+            {isRtl ? 'English' : 'العربية'}
+          </button>
+        </div>
+      </nav>
+
+      <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
+        {/* 1. Summary Section */}
+        <section className="text-center space-y-8">
+          <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold uppercase text-[#333333]">LEARNING MILESTONE REPORT</div>
+          <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] leading-tight">{student.name}'s Milestone Report</h1>
+          <div className="max-w-4xl mx-auto bg-white p-10 rounded-[32px] shadow-sm border border-gray-100 relative overflow-hidden text-start">
+             <div className="flex items-start gap-6 relative z-10">
+                <Sparkles className="text-[#FDE700] shrink-0 mt-1" size={32} />
+                <p className="text-xl md:text-2xl text-[#666666] leading-relaxed font-medium italic">"{reportData.summary || "Generating..."}"</p>
+             </div>
+             <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-blue-50/50 rounded-full opacity-40" />
+          </div>
+        </section>
+
+        {/* 2. Transformation Section */}
+        <section className="space-y-12">
+          <div className="flex items-center gap-4 px-2">
+            <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]"><TrendingUp size={24} /></div>
+            <h2 className="text-[28px] font-bold text-[#333333]">{t("The Transformation", "التحول")}</h2>
+          </div>
+          <div className="grid gap-6">
+            {reportData.transformation.map((item, i) => (
+              <div key={i} className="bg-white p-8 rounded-[24px] shadow-sm grid grid-cols-1 md:grid-cols-10 items-center gap-6 border border-white hover:border-[#26B7FF]/20 transition-all">
+                <div className="md:col-span-2 space-y-1">
+                  <span className="text-[10px] font-bold text-[#26B7FF] uppercase tracking-[2px]">CATEGORY</span>
+                  <p className="text-xl font-bold text-[#333333]">{item.category}</p>
+                </div>
+                <div className="md:col-span-4 bg-[#F6F6F6] p-6 rounded-2xl">
+                  <span className="text-[10px] font-bold text-[#666666] uppercase">START</span>
+                  <p className="text-xl font-bold text-[#333333] mt-1">{item.beforeTitle}</p>
+                  <p className="text-[14px] text-[#666666] mt-2 whitespace-pre-line leading-relaxed">{item.beforeSub}</p>
+                </div>
+                <div className="md:col-span-4 bg-[#26B7FF]/5 p-6 rounded-2xl border border-[#26B7FF]/10 shadow-inner">
+                  <span className="text-[10px] font-bold text-[#26B7FF] uppercase">NOW</span>
+                  <p className="text-xl font-extrabold text-[#26B7FF] mt-1">🚀 {item.afterTitle}</p>
+                  <p className="text-[14px] text-[#26B7FF] font-medium mt-2 whitespace-pre-line leading-relaxed">{item.afterSub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 3. Gap Analysis Section */}
+        <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full opacity-50" />
+          <div className="relative z-10 space-y-16">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 text-start">
+              <div className="space-y-4 max-w-2xl">
+                <div className="flex items-center gap-4 text-[#FDE700]"><AlertCircle size={36} /><h2 className="text-3xl md:text-4xl font-bold">{t("The 'Gap' Analysis", "تحليل الفجوة")}</h2></div>
+                <p className="text-white/60 text-lg md:text-xl leading-relaxed opacity-80">{t("Our deep analysis shows specific 'Gaps' holding you back.", "يظهر تحليلنا العميق فجوات محددة تعيق تقدمك.")}</p>
+              </div>
+              <button onClick={() => setShowFullGap(!showFullGap)} className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full text-sm font-bold transition-all border border-white/10 shrink-0">
+                {showFullGap ? t("Show Less", "عرض أقل") : t("Show Details", "عرض التفاصيل")}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-start">
+              {reportData.gaps.map((gap, idx) => (
+                <div key={idx} className="space-y-6 group">
+                  <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center font-bold text-[#FDE700] text-xl">0{gap.id}</div>
+                  <h3 className="text-xl font-bold text-white uppercase tracking-wide">{gap.title}</h3>
+                  {showFullGap && <p className="text-white/50 text-sm leading-relaxed animate-in fade-in slide-in-from-top-2 duration-500">{gap.desc}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Roadmap Section */}
+        <section className="space-y-12">
+          <div className="flex items-center gap-4 px-2">
+            <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner"><Map size={24} /></div>
+            <h2 className="text-[28px] font-bold text-[#333333]">{t("Custom Learning Roadmap", "خارطة الطريق التعليمية المخصصة")}</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-start">
+            {reportData.phases.map((p, idx) => (
+              <div key={idx} className="bg-white p-8 md:p-12 rounded-[32px] shadow-sm border-t-[10px] border-[#FDE700] space-y-8">
+                <div className="space-y-2">
+                  <h3 className="text-[#26B7FF] font-bold uppercase tracking-[2px] text-xs">{p.phaseNum}</h3>
+                  <p className="text-2xl md:text-3xl font-extrabold text-[#333333]">{p.phaseName}</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-[#F6F6F6] p-5 rounded-2xl border-s-4 border-[#26B7FF]">
+                    <span className="text-[12px] font-bold text-[#26B7FF] uppercase">Selected Module</span>
+                    <p className="text-[#333333] font-extrabold mt-1 text-lg leading-tight">{p.moduleName}</p>
+                  </div>
+                  <div className="flex gap-4 items-start">
+                    <CheckCircle2 className="text-[#26B7FF] shrink-0 mt-1" size={20} />
+                    <p className="text-[#666666] text-[16px] italic leading-relaxed">{p.whyDesc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 5. Branding Footer */}
+        <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-full bg-white/10 blur-[100px] rounded-full -ml-32 -mt-32 opacity-50" />
+          <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl group-hover:rotate-12 transition-transform duration-500">
+            <Sparkles size={40} className="text-[#FDE700]" />
+          </div>
+          <h2 className="text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic opacity-95">
+             "{reportData.encouragement || "Unlock your true speaking speed!"}"
+          </h2>
+          <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
+            {t("Excellent Progress", "إنجاز متميز")}
+          </div>
+        </section>
+      </main>
+
+      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase">
+        © 2026 MilestoneReport. All Rights Reserved.
+      </footer>
+    </div>
+  );
+}
