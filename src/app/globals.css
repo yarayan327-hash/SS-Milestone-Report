@@ -1,24 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Cairo:wght@400;600;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --primary: #26B7FF;
-  --accent: #FDE700;
-  --text-main: #333333;
-  --text-muted: #666666;
+  --primary-blue: #26B7FF;
+  --accent-yellow: #FDE700;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --bg-secondary: #F6F6F6;
+  --radius-card: 20px;
 }
 
 body {
-  font-family: 'Poppins', 'Noto Sans Arabic', sans-serif;
-  background-color: #F7F9FC;
-  color: var(--text-main);
-  -webkit-font-smoothing: antialiased;
+  @apply bg-[#F6F6F6] text-[#333333] antialiased;
+  font-family: 'Poppins', 'Cairo', sans-serif;
 }
 
-/* 智能文案解析样式类 */
+/* 🚀 核心修复：定义 Markdown 文案的自动美化类 */
 .prose-report h2 {
   @apply flex items-center gap-3 text-[28px] font-extrabold mt-12 mb-6 text-[#333333];
 }
@@ -50,4 +49,4 @@ body {
 
 /* 优质滚动条 */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: #26B7FF; border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 10px; }
