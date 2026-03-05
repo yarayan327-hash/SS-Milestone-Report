@@ -1,52 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Cairo:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Cairo:wght@400;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --primary-blue: #26B7FF;
-  --accent-yellow: #FDE700;
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --bg-secondary: #F6F6F6;
-  --radius-card: 20px;
+  --primary: #26B7FF;
+  --accent: #FDE700;
+  --text-main: #333333;
+  --bg-soft: #F6F6F6;
 }
 
 body {
-  @apply bg-[#F6F6F6] text-[#333333] antialiased;
   font-family: 'Poppins', 'Cairo', sans-serif;
+  background-color: #F7F9FC;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 🚀 核心修复：定义 Markdown 文案的自动美化类 */
-.prose-report h2 {
+/* 智能文案美化引擎 */
+.prose-custom h2 {
   @apply flex items-center gap-3 text-[28px] font-extrabold mt-12 mb-6 text-[#333333];
 }
-.prose-report h2::before {
+.prose-custom h2::before {
   content: "";
   @apply block w-1.5 h-8 bg-[#FDE700] rounded-full;
 }
-.prose-report p {
+.prose-custom p {
   @apply text-[16px] text-[#555555] leading-relaxed mb-6;
 }
-.prose-report strong {
+.prose-custom strong {
   @apply text-[#26B7FF] font-bold;
 }
-.prose-report table {
+.prose-custom table {
   @apply w-full border-collapse rounded-[20px] overflow-hidden shadow-sm my-8 bg-white border border-gray-100;
 }
-.prose-report th {
-  @apply bg-[#F6F6F6] p-4 font-bold text-sm text-[#333333] text-left;
+.prose-custom th {
+  @apply bg-[#F6F6F6] p-4 font-bold text-sm text-[#333333];
 }
-.prose-report td {
+.prose-custom td {
   @apply p-4 text-sm border-t border-gray-50 text-[#666666];
 }
-.prose-report ul {
-  @apply space-y-3 mb-8;
-}
-.prose-report li {
-  @apply flex items-start gap-3 text-[#555555] before:content-['✓'] before:text-[#26B7FF] before:font-bold;
-}
-
-/* 优质滚动条 */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 10px; }
