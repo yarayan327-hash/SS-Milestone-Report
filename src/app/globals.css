@@ -19,11 +19,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* 复刻模板应用的轻盈阴影 */
+.shadow-card {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+}
+
 /* 优质滚动条 */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--primary-blue); border-radius: 10px; }
 
-/* 卡片通用阴影 */
-.shadow-card {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+/* 防止 RTL 模式下某些布局错位 */
+[dir='rtl'] .text-start {
+  text-align: right;
 }
