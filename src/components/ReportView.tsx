@@ -17,8 +17,9 @@ export default function ReportView({ student }: { student: any }) {
     // 基础清洗
     const content = raw.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
 
+    // 核心修复：精确指定合法的截断标签，不再被 [A0] 或 [A1] 误导掐断数据
     const extract = (tag: string) => {
-      const regex = new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[|$)`, 'i');
+      const regex = new RegExp(`\\[${tag}\\]([\\s\\S]*?)(?=\\[(?:SUMMARY|TRANSFORMATION|GAP|ROADMAP|ENCOURAGEMENT)\\]|$)`, 'i');
       return content.match(regex)?.[1]?.trim() || null;
     };
 
@@ -32,12 +33,11 @@ export default function ReportView({ student }: { student: any }) {
         : summaryRaw;
     }
 
-    // 2. Transformation (修复 TypeScript 正则 /s 报错，改用 [\s\S] 兼容老版本)
+    // 2. Transformation 
     const transRaw = extract("TRANSFORMATION");
     let transformation: any[] = [];
     if (transRaw) {
       transformation = transRaw.split(/Category:/i).filter(Boolean).map((block: string) => {
-        // 使用 [\s\S]*? 代替 .*? 并移除 /s 标志
         const beforeMatch = block.match(/Before:\s*([\s\S]*?)(?=After:|$)/i);
         const afterMatch = block.match(/After:\s*([\s\S]*)/i);
         const catMatch = block.match(/^([\s\S]*?)(?=Before:)/i);
@@ -70,7 +70,7 @@ export default function ReportView({ student }: { student: any }) {
       });
     }
 
-    // 4. Roadmap 
+    // 4. Roadmap (修复 [A0] 截断 Bug)
     const roadmapRaw = extract("ROADMAP");
     let phases: any[] = [];
     if (roadmapRaw) {
