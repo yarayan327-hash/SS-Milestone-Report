@@ -32,15 +32,15 @@ export default function ReportView({ student }: { student: any }) {
         : summaryRaw;
     }
 
-    // 2. Transformation (防换行干扰版)
+    // 2. Transformation (修复 TypeScript 正则 /s 报错，改用 [\s\S] 兼容老版本)
     const transRaw = extract("TRANSFORMATION");
     let transformation: any[] = [];
     if (transRaw) {
       transformation = transRaw.split(/Category:/i).filter(Boolean).map((block: string) => {
-        // 利用正则跨行匹配 Before 和 After，无视用户乱按的回车
-        const beforeMatch = block.match(/Before:\s*(.*?)(?=After:|$)/is);
-        const afterMatch = block.match(/After:\s*(.*)/is);
-        const catMatch = block.match(/^(.*?)(?=Before:)/is);
+        // 使用 [\s\S]*? 代替 .*? 并移除 /s 标志
+        const beforeMatch = block.match(/Before:\s*([\s\S]*?)(?=After:|$)/i);
+        const afterMatch = block.match(/After:\s*([\s\S]*)/i);
+        const catMatch = block.match(/^([\s\S]*?)(?=Before:)/i);
         
         const beforeText = beforeMatch ? beforeMatch[1].replace(/[\n\r]+/g, ' ').trim() : "";
         const afterText = afterMatch ? afterMatch[1].replace(/[\n\r]+/g, ' ').trim() : "";
@@ -58,11 +58,10 @@ export default function ReportView({ student }: { student: any }) {
       });
     }
 
-    // 3. Gap (防换行干扰版)
+    // 3. Gap 
     const gapRaw = extract("GAP");
     let gaps: any[] = [];
     if (gapRaw) {
-      // 按照 "01 |" 这样的规律分割，然后强制合并块内回车
       const gapBlocks = gapRaw.split(/(?=\d{2}\s*\|)/).filter((b: string) => b.trim());
       gaps = gapBlocks.map((block: string) => {
         const singleLineBlock = block.replace(/[\n\r]+/g, ' ');
@@ -71,14 +70,13 @@ export default function ReportView({ student }: { student: any }) {
       });
     }
 
-    // 4. Roadmap (防换行干扰版 - 解决您的内容缺失问题)
+    // 4. Roadmap 
     const roadmapRaw = extract("ROADMAP");
     let phases: any[] = [];
     if (roadmapRaw) {
-      // 按照 "Phase 1" 这样的关键词分割阶段，然后把内部的回车全部抹平
       const phaseBlocks = roadmapRaw.split(/(?=Phase\s*\d)/i).filter((b: string) => b.trim());
       phases = phaseBlocks.map((block: string) => {
-        const singleLineBlock = block.replace(/[\n\r]+/g, ' '); // 核心修复：把所有误按的回车替换为空格
+        const singleLineBlock = block.replace(/[\n\r]+/g, ' '); 
         const p = singleLineBlock.split('|').map((s: string) => s.trim());
         return { 
           phaseNum: p[0] || "", 
@@ -250,7 +248,7 @@ export default function ReportView({ student }: { student: any }) {
           <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl group-hover:rotate-12 transition-transform duration-500">
             <Sparkles size={40} className="text-[#FDE700]" />
           </div>
-          <h2 className="text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic opacity-95">
+          <h2 className={`text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic ${reportData.encouragement.includes('⚠️') ? 'text-red-200' : 'opacity-95'}`}>
              "{reportData.encouragement}"
           </h2>
           <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
