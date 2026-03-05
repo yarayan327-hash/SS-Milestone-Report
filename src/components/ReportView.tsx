@@ -17,13 +17,12 @@ export default function ReportView({ student }: { student: any }) {
   const cleanContent = useMemo(() => {
     if (!student.reportContent) return "";
     return student.reportContent
-      .replace(/<br\s*\/?>/gi, '\n') // 清洗 Vocabulary <br> 这种标签
+      .replace(/<br\s*\/?>/gi, '\n') 
       .replace(/&nbsp;/g, ' ')
       .replace(/\n{3,}/g, '\n\n');
   }, [student.reportContent]);
 
   // --- 核心逻辑 2：智能提取可视化卡片数据 ---
-  // 逻辑：在长文中搜索特定的关键词来决定进度条
   const stats = useMemo(() => {
     const text = cleanContent.toLowerCase();
     return [
@@ -52,7 +51,7 @@ export default function ReportView({ student }: { student: any }) {
     <div className={`min-h-screen bg-[#F6F6F6] text-[#333333] pb-24 transition-all duration-500`} dir={isRtl ? 'rtl' : 'ltr'}>
       
       {/* 顶部 Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 sticky top-0 z-50">
+      <header className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-50">
         <div className="max-w-[1140px] mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-95">
@@ -89,8 +88,8 @@ export default function ReportView({ student }: { student: any }) {
           <h2 className="text-[36px] sm:text-[41px] font-extrabold text-[#333333] leading-tight tracking-tight">
             {isRtl ? `تقرير إنجاز ${student.name}` : `${student.name}'s Milestone Report`}
           </h2>
-          <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-gray-100 border-l-[12px] border-l-[#26B7FF] relative overflow-hidden group">
-            <div className="flex items-start gap-4 relative z-10 text-start">
+          <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-gray-100 border-l-[12px] border-l-[#26B7FF] relative overflow-hidden group text-start">
+            <div className="flex items-start gap-4 relative z-10">
               <Sparkles className="text-[#FDE700] shrink-0 mt-1" size={32} />
               <p className="text-[18px] md:text-[20px] text-[#555555] leading-relaxed italic font-medium">
                 {isRtl 
@@ -99,9 +98,10 @@ export default function ReportView({ student }: { student: any }) {
               </p>
             </div>
             <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-blue-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700" />
-          </section>
+          </div>
+        </section>
 
-        {/* 核心指标可视化卡片 - 动态提取 */}
+        {/* 核心指标可视化卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stats.map((item, i) => (
             <div key={i} className="bg-white rounded-[24px] p-8 shadow-sm border border-gray-50 transition-all hover:shadow-xl hover:-translate-y-1 group">
@@ -119,7 +119,7 @@ export default function ReportView({ student }: { student: any }) {
           ))}
         </div>
 
-        {/* 智能文字解析区 - 融入精美样式 */}
+        {/* 智能文字解析区 */}
         <section className="bg-white rounded-[32px] p-8 md:p-16 shadow-card border border-gray-100 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#26B7FF] via-[#FDE700] to-[#26B7FF] opacity-30" />
           <div className="prose prose-report max-w-none">
@@ -134,7 +134,7 @@ export default function ReportView({ student }: { student: any }) {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-[#FDE700] rounded-[24px] flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform duration-500">
             <Target className="text-[#333333] w-10 h-10" />
           </div>
-          <h3 className="text-[28px] sm:text-[32px] font-bold mb-6 tracking-tight tracking-tight">Final Encouragement</h3>
+          <h3 className="text-[28px] sm:text-[32px] font-bold mb-6 tracking-tight">Final Encouragement</h3>
           <p className="max-w-2xl mx-auto text-[#CCCCCC] text-[18px] leading-relaxed mb-10 opacity-90 italic">
              {isRtl 
                ? "زياد، أنت تمتلك حدساً لغوياً رائعاً. لا تدع عادة الترجمة العربية تبطئ عقلك اللامع. ثق بإحساسك، ودعنا نطلق العنان لسرعتك الحقيقية!"
