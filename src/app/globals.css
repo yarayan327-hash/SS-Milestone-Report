@@ -7,19 +7,47 @@
 :root {
   --primary: #26B7FF;
   --accent: #FDE700;
+  --text-main: #333333;
+  --text-muted: #666666;
 }
 
 body {
   font-family: 'Poppins', 'Noto Sans Arabic', sans-serif;
-  background-color: #F7F9FC; /* 浅灰蓝背景 */
-  color: #333333;
+  background-color: #F7F9FC;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 隐藏 Webkit 滚动条，保持页面整洁 */
-::-webkit-scrollbar {
-  width: 8px;
+/* 智能文案解析样式类 */
+.prose-report h2 {
+  @apply flex items-center gap-3 text-[28px] font-extrabold mt-12 mb-6 text-[#333333];
 }
-::-webkit-scrollbar-thumb {
-  background: #CBD5E0; 
-  border-radius: 4px;
+.prose-report h2::before {
+  content: "";
+  @apply block w-1.5 h-8 bg-[#FDE700] rounded-full;
 }
+.prose-report p {
+  @apply text-[16px] text-[#555555] leading-relaxed mb-6;
+}
+.prose-report strong {
+  @apply text-[#26B7FF] font-bold;
+}
+.prose-report table {
+  @apply w-full border-collapse rounded-[20px] overflow-hidden shadow-sm my-8 bg-white border border-gray-100;
+}
+.prose-report th {
+  @apply bg-[#F6F6F6] p-4 font-bold text-sm text-[#333333] text-left;
+}
+.prose-report td {
+  @apply p-4 text-sm border-t border-gray-50 text-[#666666];
+}
+.prose-report ul {
+  @apply space-y-3 mb-8;
+}
+.prose-report li {
+  @apply flex items-start gap-3 text-[#555555] before:content-['✓'] before:text-[#26B7FF] before:font-bold;
+}
+
+/* 优质滚动条 */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: #26B7FF; border-radius: 10px; }
