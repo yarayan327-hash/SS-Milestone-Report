@@ -1,94 +1,155 @@
-import { getStudents } from '@/lib/db';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Calendar, User, GraduationCap, Lightbulb, Target } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { ArrowLeft, Award, TrendingUp, User, AlertTriangle, Map, GraduationCap } from 'lucide-react';
 
-export const revalidate = 0;
+export default function ReportDetailPage() {
+  const [lang, setLang] = useState<'en' | 'ar'>('en');
+  const isRtl = lang === 'ar';
 
-export default async function ReportPage({ params }: { params: { id: string } }) {
-  const students = await getStudents();
-  // 根据 URL 中的 ID 查找对应的学生报告
-  const student = students.find((s: any) => s.id === params.id);
+  // 模拟 Ziad 的数据
+  const data = {
+    name: "Ziad",
+    studentId: "62283399",
+    content: {
+      en: {
+        title: "Ziad Learning Milestone Report",
+        summary: "Congratulations on your fantastic progress! You have transitioned beautifully from giving one-word answers to building full, impressive sentences.",
+        gapTitle: "The Gap Analysis",
+        roadmapTitle: "Learning Roadmap",
+        encouragement: "Ziad, you have a brilliant language intuition. Do not let the habit of Arabic translation slow down your bright mind."
+      },
+      ar: {
+        title: "تقرير إنجاز تعلم زياد",
+        summary: "تهانينا على تقدمك الرائع! لقد انتقلت ببراعة من إعطاء إجابات مكونة من كلمة واحدة إلى بناء جمل كاملة ومثيرة للإعجاب.",
+        gapTitle: "تحليل الفجوة",
+        roadmapTitle: "خارطة الطريق التعليمية",
+        encouragement: "زياد، أنت تمتلك حدساً لغوياً رائعاً. لا تدع عادة الترجمة العربية تبطئ عقلك اللامع."
+      }
+    }
+  };
 
-  if (!student) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <h2 className="text-2xl font-bold text-gray-800">Report Not Found</h2>
-        <Link href="/" className="mt-4 text-blue-600 hover:underline">Return to Dashboard</Link>
-      </div>
-    );
-  }
+  const t = isRtl ? data.content.ar : data.content.en;
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    // 注意：这里不再包含 html/body 标签，只保留内容容器
+    <div className="min-h-screen bg-[#F6F6F6] text-[#333333] pb-20" dir={isRtl ? 'rtl' : 'ltr'}>
+      
       {/* 顶部导航 */}
-      <div className="flex items-center justify-between mb-8">
-        <Link href="/" className="flex items-center gap-2 text-gray-500 hover:text-gray-800 transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">Back to Dashboard</span>
-        </Link>
-        <div className="flex items-center gap-2 text-gray-400 text-sm">
-          <Calendar className="w-4 h-4" />
-          {new Date(student.createdAt).toLocaleDateString()}
-        </div>
-      </div>
-
-      {/* 核心卡片 */}
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
-        {/* 头部装饰 */}
-        <div className="bg-[#0066FF] p-8 sm:p-12 text-white">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center border border-white/30">
-                <User className="w-10 h-10 text-white" />
+      <header className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-50">
+        <div className="max-w-[1140px] mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-all active:scale-90">
+              <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
+            </Link>
+            <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
+              <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white">
+                <GraduationCap size={24} />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold">{student.name}</h1>
-                <p className="text-white/80 font-medium mt-1 flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4" /> Student ID: {student.studentId}
-                </p>
+                <h1 className="text-lg font-bold leading-tight">{data.name}</h1>
+                <p className="text-[12px] text-[#666666]">ID: {data.studentId}</p>
               </div>
             </div>
-            <div className="px-6 py-3 bg-[#FDE700] text-black font-bold rounded-2xl shadow-lg">
-              Milestone Report
+          </div>
+          
+          <button 
+            onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+            className="px-5 py-2 border-2 border-[#26B7FF] text-[#26B7FF] rounded-[50px] font-semibold text-sm hover:bg-[#26B7FF] hover:text-white transition-all shadow-sm"
+          >
+            {isRtl ? 'English' : 'العربية'}
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-[1140px] mx-auto px-6 pt-10 space-y-16 font-poppins">
+        
+        {/* 核心视觉：主标题 */}
+        <section className="text-center space-y-4 max-w-3xl mx-auto">
+          <div className="inline-block px-4 py-1 bg-[#FDE700] rounded-full text-[14px] font-bold text-[#333333] uppercase shadow-sm">
+            Executive Summary
+          </div>
+          <h2 className="text-[32px] sm:text-[41px] font-bold text-[#333333] leading-tight">
+            {t.title}
+          </h2>
+          <p className="text-[18px] sm:text-[20px] text-[#666666] leading-relaxed">
+            {t.summary}
+          </p>
+        </section>
+
+        {/* 转换卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { label: isRtl ? 'المفردات' : 'Vocabulary', now: isRtl ? 'متقدمة ومعبرة' : 'Advanced & Expressive', icon: <Award className="text-[#26B7FF]" /> },
+            { label: isRtl ? 'بنية الجملة' : 'Sentence Structure', now: isRtl ? 'دقيقة وصحيحة' : 'Accurate & Correct', icon: <TrendingUp className="text-[#26B7FF]" /> },
+            { label: isRtl ? 'تدفق المحادثة' : 'Conversational Flow', now: isRtl ? 'تخطيط معقد' : 'Complex Planning', icon: <User className="text-[#26B7FF]" /> }
+          ].map((item, i) => (
+            <div key={i} className="bg-white rounded-[20px] p-8 shadow-sm border border-gray-50 hover:shadow-md transition-all">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-50 rounded-lg">{item.icon}</div>
+                <h4 className="text-[20px] font-bold">{item.label}</h4>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full mb-4">
+                <div className="h-full bg-[#26B7FF] rounded-full w-[90%]"></div>
+              </div>
+              <p className="text-[#26B7FF] font-bold">🚀 {item.now}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* 风险分析 */}
+        <section className="bg-white rounded-[20px] p-8 md:p-12 shadow-sm border border-gray-50">
+          <div className="flex items-center gap-4 mb-8">
+            <AlertTriangle className="text-[#FDE700] w-10 h-10" />
+            <h3 className="text-[28px] sm:text-[32px] font-bold">{t.gapTitle}</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[14px]">
+            <div className="p-6 bg-[#F6F6F6] rounded-[20px] border-s-8 border-[#FDE700] hover:bg-white hover:shadow-inner transition-all">
+              <h5 className="font-bold mb-2">Phonics Trap</h5>
+              <p className="text-[#666666]">Struggling with vowel sounds and silent letters.</p>
+            </div>
+            <div className="p-6 bg-[#F6F6F6] rounded-[20px] border-s-8 border-[#FDE700] hover:bg-white hover:shadow-inner transition-all">
+              <h5 className="font-bold mb-2">Understanding Gap</h5>
+              <p className="text-[#666666]">Decoding words instead of full context.</p>
+            </div>
+            <div className="p-6 bg-[#F6F6F6] rounded-[20px] border-s-8 border-[#FDE700] hover:bg-white hover:shadow-inner transition-all">
+              <h5 className="font-bold mb-2">Translation Crutch</h5>
+              <p className="text-[#666666]">Building sentences in Arabic first.</p>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* 报告正文渲染区 */}
-        <div className="p-8 sm:p-12">
-          <div className="prose prose-blue max-w-none 
-            prose-headings:font-bold prose-headings:text-gray-900
-            prose-p:text-gray-600 prose-p:leading-relaxed
-            prose-li:text-gray-600
-            prose-table:border prose-table:rounded-xl prose-table:overflow-hidden
-            prose-th:bg-gray-50 prose-th:p-4
-            prose-td:p-4 prose-td:border-t">
-            
-            {/* 使用 ReactMarkdown 完美还原你输入的所有文案（包括表格和阿拉伯语） */}
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {student.reportContent}
-            </ReactMarkdown>
+        {/* 学习路线 */}
+        <section className="space-y-8">
+          <div className="flex items-center gap-4">
+            <Map className="text-[#26B7FF] w-10 h-10" />
+            <h3 className="text-[28px] sm:text-[32px] font-bold">{t.roadmapTitle}</h3>
           </div>
-        </div>
-      </div>
+          <div className="space-y-6">
+            <div className="bg-white p-8 rounded-[20px] border-2 border-[#26B7FF] relative">
+              <span className="absolute top-0 right-8 -translate-y-1/2 bg-[#26B7FF] text-white px-4 py-1 rounded-full text-xs font-bold uppercase">Phase 1</span>
+              <h4 className="text-[20px] font-bold text-[#26B7FF] mb-2">[A0] Knowledge: Foundation Repair</h4>
+              <p className="text-[#666666]">Focus on fixing phonics rules to cure confusion between sounds.</p>
+            </div>
+            <div className="bg-white p-8 rounded-[20px] border border-gray-100 opacity-60">
+              <h4 className="text-[20px] font-bold mb-2">[A1] Skills: Text Analysis</h4>
+              <p className="text-[#666666]">Moving to short stories and detailed context grabbing.</p>
+            </div>
+          </div>
+        </section>
 
-      {/* 底部装饰 */}
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="bg-blue-50/50 p-6 rounded-[32px] border border-blue-100 flex items-start gap-4">
-          <Lightbulb className="w-6 h-6 text-[#0066FF] shrink-0 mt-1" />
-          <p className="text-sm text-blue-800 leading-relaxed font-medium">
-            This report is generated based on deep-dive intuition analysis and official B1 syllabus mapping.
-          </p>
-        </div>
-        <div className="bg-yellow-50/50 p-6 rounded-[32px] border border-yellow-100 flex items-start gap-4">
-          <Target className="w-6 h-6 text-yellow-700 shrink-0 mt-1" />
-          <p className="text-sm text-yellow-800 leading-relaxed font-medium">
-            Next steps: Follow the customized Roadmap sessions to maintain progress consistency.
-          </p>
-        </div>
-      </div>
+        {/* 底部语 */}
+        <footer className="bg-[#333333] text-white p-12 rounded-[32px] text-center shadow-lg">
+          <h3 className="text-[24px] font-bold mb-4">Final Encouragement</h3>
+          <p className="max-w-2xl mx-auto text-[#CCCCCC] leading-relaxed mb-8">{t.encouragement}</p>
+          <div className="inline-flex items-center gap-2 text-[#FDE700] font-bold px-6 py-3 border border-[#FDE700]/30 rounded-2xl">
+            <Award size={20} />
+            <span>I am incredibly proud of you!</span>
+          </div>
+        </footer>
+
+      </main>
     </div>
   );
 }
