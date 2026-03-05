@@ -12,7 +12,7 @@ export default function ReportView({ student }: { student: any }) {
   const [showFullGap, setShowFullGap] = useState(false);
   const isRtl = lang === 'ar';
 
-  // --- 增强版分段解析引擎 ---
+  // --- 彻底重构的解析引擎 ---
   const reportData = useMemo(() => {
     const content = student?.reportContent || "";
     
@@ -21,54 +21,62 @@ export default function ReportView({ student }: { student: any }) {
       return content.match(regex)?.[1]?.trim() || "";
     };
 
-    // 1. 解析 Summary 并根据语言分离内容
+    // 1. Summary 语言隔离：寻找 "Dear" 和 "عزيزي" 的起始位置进行精准切割
     const summaryRaw = extractSection("SUMMARY");
-    const summaryParts = summaryRaw.split(/\n(?=عزيزي)/); // 以阿拉伯语问候语为界分割
-    const summary = isRtl ? (summaryParts[1] || summaryParts[0]) : summaryParts[0];
+    const arStartIdx = summaryRaw.search(/عزيزي/);
+    let summary = "";
+    if (arStartIdx !== -1) {
+      summary = isRtl ? summaryRaw.substring(arStartIdx).trim() : summaryRaw.substring(0, arStartIdx).trim();
+    } else {
+      summary = summaryRaw;
+    }
 
-    // 2. 解析 Transformation
+    // 2. Transformation 解析 (Before & After)
     const transRaw = extractSection("TRANSFORMATION");
     const transformation = transRaw.split(/Category:/i).filter(Boolean).map((block: string) => {
-      const lines = block.trim().split('\n');
-      const cat = lines[0].trim();
-      const beforeLine = lines.find((l: string) => l.startsWith('Before:'))?.replace('Before:', '') || "";
-      const afterLine = lines.find((l: string) => l.startsWith('After:'))?.replace('After:', '') || "";
+      const lines = block.trim().split('\n').map(l => l.trim());
+      const cat = lines[0] || "";
+      const beforeLine = lines.find(l => l.startsWith('Before:'))?.replace('Before:', '') || "";
+      const afterLine = lines.find(l => l.startsWith('After:'))?.replace('After:', '') || "";
       
-      const [bTitle, bSub] = beforeLine.split('|').map(s => s.trim());
-      const [aTitle, aSub] = afterLine.split('|').map(s => s.trim());
+      const bParts = beforeLine.split('|').map(s => s.trim());
+      const aParts = afterLine.split('|').map(s => s.trim());
 
       return {
         category: cat,
-        beforeTitle: bTitle || "",
-        beforeSub: bSub || "",
-        afterTitle: aTitle || "",
-        afterSub: aSub || "",
+        beforeTitle: bParts[0] || "",
+        beforeSub: bParts[1] || "",
+        afterTitle: aParts[0] || "",
+        afterSub: aParts[1] || "",
       };
     });
 
-    // 3. 解析 Gap
+    // 3. Gap 解析
     const gaps = extractSection("GAP").split('\n').filter(Boolean).map((line: string) => {
       const parts = line.split('|').map(s => s.trim());
       return { id: parts[0], title: parts[1], desc: parts[2] };
     });
 
-    // 4. 解析 Roadmap
-    const roadmapRaw = extractSection("ROADMAP");
-    const phases = roadmapRaw.split('\n').filter(Boolean).map((line: string) => {
+    // 4. Roadmap 解析 (修复内容缺失)：强制对位每一个 Pipe 分隔的字段
+    const phases = extractSection("ROADMAP").split('\n').filter(Boolean).map((line: string) => {
       const parts = line.split('|').map(s => s.trim());
-      // 适配格式: Phase | Name | Module | Why
       return { 
-        phase: parts[0], 
-        name: parts[1], 
-        module: parts[2], 
-        why: parts[3] 
+        phaseNum: parts[0] || "", // "Phase 1"
+        phaseName: parts[1] || "", // "FOUNDATION REPAIR"
+        moduleName: parts[2] || "", // "[A0] Knowledge..."
+        whyDesc: parts[3] || ""     // "Fixes sounds..."
       };
     });
 
-    // 5. 解析 Encouragement 并分离语言
+    // 5. Encouragement 语言隔离
     const encRaw = extractSection("ENCOURAGEMENT");
-    const encParts = encRaw.split(/\n(?=زياد)/); 
-    const encouragement = isRtl ? (encParts[1] || encParts[0]) : encParts[0];
+    const encArIdx = encRaw.search(/زياد/);
+    let encouragement = "";
+    if (encArIdx !== -1) {
+      encouragement = isRtl ? encRaw.substring(encArIdx).trim() : encRaw.substring(0, encArIdx).trim();
+    } else {
+      encouragement = encRaw;
+    }
 
     return { summary, transformation, gaps, phases, encouragement };
   }, [student?.reportContent, isRtl]);
@@ -76,15 +84,15 @@ export default function ReportView({ student }: { student: any }) {
   const t = (en: string, ar: string) => isRtl ? ar : en;
 
   return (
-    <div className={`min-h-screen bg-[#F6F6F6] ${isRtl ? 'rtl text-right' : 'text-left font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen bg-[#F6F6F6] ${isRtl ? 'rtl text-right font-arabic' : 'text-left font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5">
-        <div className="max-w-[1140px] mx-auto px-6 h-20 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5 h-20 flex items-center">
+        <div className="max-w-[1140px] mx-auto px-6 w-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="p-2 hover:bg-gray-100 rounded-full">
                <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
-            <div className="flex items-center gap-3 border-s ps-4 border-gray-100 font-sans">
+            <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
               <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg">
                 <Trophy size={24} />
               </div>
@@ -98,10 +106,12 @@ export default function ReportView({ student }: { student: any }) {
       </nav>
 
       <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
-        {/* Header Section */}
+        {/* 1. Summary Section - 修复语言混合 */}
         <section className="text-center space-y-8">
           <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold uppercase text-[#333333]">LEARNING MILESTONE REPORT</div>
-          <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333]">{student.name}{isRtl ? ' تقرير إنجاز' : "'s Milestone Report"}</h1>
+          <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] leading-tight">
+            {student.name}{isRtl ? ' تقرير إنجاز' : "'s Milestone Report"}
+          </h1>
           <div className="max-w-4xl mx-auto bg-white p-10 rounded-[32px] shadow-sm border border-gray-100 relative overflow-hidden text-start">
              <div className="flex items-start gap-6 relative z-10">
                 <Sparkles className="text-[#FDE700] shrink-0 mt-1" size={32} />
@@ -111,7 +121,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* Transformation Section */}
+        {/* 2. Transformation Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]"><TrendingUp size={24} /></div>
@@ -119,7 +129,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
           <div className="grid gap-6">
             {reportData.transformation.map((item: any, i: number) => (
-              <div key={i} className="bg-white p-8 rounded-[24px] shadow-sm grid grid-cols-1 md:grid-cols-10 items-center gap-6 border border-white transition-all hover:border-[#26B7FF]/20">
+              <div key={i} className="bg-white p-8 rounded-[24px] shadow-sm grid grid-cols-1 md:grid-cols-10 items-center gap-6 border border-white hover:border-[#26B7FF]/20 transition-all">
                 <div className="md:col-span-2 space-y-1">
                   <span className="text-[10px] font-bold text-[#26B7FF] uppercase tracking-[2px]">CATEGORY</span>
                   <p className="text-xl font-bold text-[#333333]">{item.category}</p>
@@ -127,19 +137,19 @@ export default function ReportView({ student }: { student: any }) {
                 <div className="md:col-span-4 bg-[#F6F6F6] p-6 rounded-2xl">
                   <span className="text-[10px] font-bold text-[#666666] uppercase">START</span>
                   <p className="text-xl font-bold text-[#333333] mt-1">{item.beforeTitle}</p>
-                  <p className="text-[14px] text-[#666666] mt-2 whitespace-pre-line">{item.beforeSub}</p>
+                  <p className="text-[14px] text-[#666666] mt-2 whitespace-pre-line leading-relaxed">{item.beforeSub}</p>
                 </div>
-                <div className="md:col-span-4 bg-[#26B7FF]/5 p-6 rounded-2xl border border-[#26B7FF]/10">
+                <div className="md:col-span-4 bg-[#26B7FF]/5 p-6 rounded-2xl border border-[#26B7FF]/10 shadow-inner">
                   <span className="text-[10px] font-bold text-[#26B7FF] uppercase">NOW</span>
                   <p className="text-xl font-extrabold text-[#26B7FF] mt-1">🚀 {item.afterTitle}</p>
-                  <p className="text-[14px] text-[#26B7FF] font-medium mt-2 whitespace-pre-line">{item.afterSub}</p>
+                  <p className="text-[14px] text-[#26B7FF] font-medium mt-2 whitespace-pre-line leading-relaxed">{item.afterSub}</p>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Gap Analysis Section */}
+        {/* 3. Gap Analysis */}
         <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full opacity-50" />
           <div className="relative z-10 space-y-16">
@@ -158,34 +168,33 @@ export default function ReportView({ student }: { student: any }) {
                   <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center font-bold text-[#FDE700] text-xl">0{gap.id}</div>
                   <h3 className="text-xl font-bold text-white uppercase tracking-wide">{gap.title}</h3>
                   {showFullGap && <p className="text-white/50 text-sm leading-relaxed animate-in fade-in slide-in-from-top-2 duration-500">{gap.desc}</p>}
-                  <div className="h-0.5 w-12 bg-[#FDE700]/30 group-hover:w-full transition-all duration-700" />
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Roadmap Section - 恢复 Roadmap 显示 */}
+        {/* 4. Roadmap Section - 彻底修复缺失问题 */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner"><Map size={24} /></div>
-            <h2 className="text-[28px] font-bold text-[#333333]">{t("Custom Learning Roadmap", "خارطة الطريق التعليمية المخصصة")}</h2>
+            <h2 className="text-[28px] font-bold text-[#333333]">{t("Custom Learning Roadmap", "خارطة الطريق التعليمية")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-start">
             {reportData.phases.map((p: any, idx: number) => (
               <div key={idx} className="bg-white p-8 md:p-12 rounded-[32px] shadow-sm border-t-[10px] border-[#FDE700] space-y-8">
                 <div className="space-y-2">
-                  <h3 className="text-[#26B7FF] font-bold uppercase tracking-[2px] text-xs">{p.phase}</h3>
-                  <p className="text-2xl md:text-3xl font-extrabold text-[#333333]">{p.name}</p>
+                  <h3 className="text-[#26B7FF] font-bold uppercase tracking-[2px] text-xs">{p.phaseNum}</h3>
+                  <p className="text-2xl md:text-3xl font-extrabold text-[#333333]">{p.phaseName}</p>
                 </div>
                 <div className="space-y-4">
                   <div className="bg-[#F6F6F6] p-5 rounded-2xl border-s-4 border-[#26B7FF]">
                     <span className="text-[12px] font-bold text-[#26B7FF] uppercase">Selected Module</span>
-                    <p className="text-[#333333] font-extrabold mt-1 text-lg">{p.module}</p>
+                    <p className="text-[#333333] font-extrabold mt-1 text-lg leading-tight">{p.moduleName}</p>
                   </div>
-                  <div className="flex gap-4">
-                    <CheckCircle2 className="text-[#26B7FF] shrink-0" size={22} />
-                    <p className="text-[#666666] text-[16px] italic leading-relaxed">{p.why}</p>
+                  <div className="flex gap-4 items-start">
+                    <CheckCircle2 className="text-[#26B7FF] shrink-0 mt-1" size={20} />
+                    <p className="text-[#666666] text-[16px] italic leading-relaxed">{p.whyDesc}</p>
                   </div>
                 </div>
               </div>
@@ -193,16 +202,16 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* Footer Section */}
+        {/* 5. Branding Footer */}
         <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-full bg-white/10 blur-[100px] rounded-full -ml-32 -mt-32 opacity-50" />
-          <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl">
+          <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl group-hover:rotate-12 transition-transform duration-500">
             <Sparkles size={40} className="text-[#FDE700]" />
           </div>
           <h2 className="text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic opacity-95">
              "{reportData.encouragement}"
           </h2>
-          <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl shadow-black/20 transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
+          <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
             {t("Verified Achievement", "إنجاز معتمد")}
           </div>
         </section>
