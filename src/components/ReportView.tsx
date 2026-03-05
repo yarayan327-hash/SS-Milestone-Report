@@ -4,40 +4,38 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, Trophy, TrendingUp, User, GraduationCap, 
-  CheckCircle2, Sparkles, Languages, AlertCircle, Map, ChevronRight
+  CheckCircle2, Sparkles, Languages, AlertCircle, Map, ChevronRight, Award
 } from 'lucide-react';
 
 export default function ReportView({ student }: { student: any }) {
   const [lang, setLang] = useState<'en' | 'ar'>('en');
   const isRtl = lang === 'ar';
 
-  // --- 智能数据提取引擎 (深度优化版) ---
+  // --- 智能解析引擎 (针对 TypeScript 严格模式优化) ---
   const reportData = useMemo(() => {
     const text = (student.reportContent || "")
-      .replace(/<br\s*\/?>/gi, '\n') // 强制清理文案中残留的 <br> 标签
+      .replace(/<br\s*\/?>/gi, '\n') 
       .replace(/&nbsp;/g, ' ');
 
-    // 1. 语言段落分离逻辑 (通过识别英文/阿拉伯语关键词定位)
-    const enPart = text.split(/عزيزي زياد/)[0]; // 截取英文部分
-    const arPart = text.includes('عزيزي زياد') ? 'عزيزي زياد' + text.split(/عزيزي زياد/)[1].split('📈')[0] : ""; // 截取阿拉伯语部分
+    // 1. 语言段落分离
+    const enPart = text.split(/عزيزي زياد/)[0];
+    const arPart = text.includes('عزيزي زياد') ? 'عزيزي زياد' + text.split(/عزيزي زياد/)[1].split('📈')[0] : "";
 
-    // 2. 提取 Executive Summary
+    // 2. 提取 Summary
     const extractSummary = () => {
       const targetText = isRtl ? arPart : enPart;
-      const match = targetText.match(/Dear.*?\n([\s\S]*?)(?=\n\n|\n[A-Z\u0600-\u06FF])/i) || 
-                    targetText.match(/عزيزي.*?\n([\s\S]*?)(?=\n\n|\n[A-Z\u0600-\u06FF])/u);
+      const match = targetText.match(/Dear[\s\S]*?\n([\s\S]*?)(?=\n\n|\n[A-Z\u0600-\u06FF])/i) || 
+                    targetText.match(/عزيزي[\s\S]*?\n([\s\S]*?)(?=\n\n|\n[A-Z\u0600-\u06FF])/u);
       return match?.[1]?.trim().replace(/\*/g, '') || "Congratulations on your progress!";
     };
 
-    // 3. 提取 Transformation (Before & After)
-    // 采用“后置搜索”策略：找到类别名，跳过标题行，取接下来的两行
+    // 3. 提取 Transformation (Before & After) - 修复 Implicit Any 错误
     const extractTrans = (catEn: string, catAr: string) => {
       const searchKey = isRtl ? catAr : catEn;
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      const catIdx = lines.findIndex(l => l.includes(searchKey));
+      const lines = text.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+      const catIdx = lines.findIndex((l: string) => l.includes(searchKey));
       
       if (catIdx !== -1) {
-        // 在文案结构中，类别名下方分别是 START 的内容和 NOW 的内容
         return {
           start: lines[catIdx + 1] || "Initial stage",
           now: lines[catIdx + 2] || "Developing..."
@@ -50,8 +48,8 @@ export default function ReportView({ student }: { student: any }) {
       summary: extractSummary(),
       transformation: [
         { category: t("Vocabulary", "المفردات"), ...extractTrans("Vocabulary", "المفردات") },
-        { category: t("Sentence Structure", "بنية الجملة"), ...extractTrans("Sentence Structure", "بنية الجملة") },
-        { category: t("Conversational Flow", "تدفق المحادثة"), ...extractTrans("Conversational Flow", "تدفق المحادثة") }
+        { category: "Sentence Structure", ...extractTrans("Sentence Structure", "بنية الجملة") },
+        { category: "Conversational Flow", ...extractTrans("Conversational Flow", "تدفق المحادثة") }
       ],
       encouragement: isRtl 
         ? "زياد، أنت تمتلك حدساً لغوياً رائعاً. ثق بإحساسك، ودعنا نطلق العنان لسرعتك الحقيقية!" 
@@ -64,14 +62,14 @@ export default function ReportView({ student }: { student: any }) {
   return (
     <div className={`min-h-screen bg-[#F6F6F6] selection:bg-[#26B7FF]/30 ${isRtl ? 'rtl text-right font-arabic' : 'text-left font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
       
-      {/* --- 顶部导航栏 --- */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5">
+      {/* --- 顶部导航栏 (复刻自 App.tsx) --- */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5 font-sans">
         <div className="max-w-[1140px] mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-all">
                <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
-            <div className="flex items-center gap-3 border-s ps-4 border-gray-100 font-sans">
+            <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
               <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg">
                 <Trophy size={24} />
               </div>
@@ -93,9 +91,9 @@ export default function ReportView({ student }: { student: any }) {
 
       <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
         
-        {/* --- Hero Section (修正内容混合问题) --- */}
+        {/* --- Hero Section (复刻自 App.tsx) --- */}
         <section className="text-center space-y-8">
-          <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold tracking-widest uppercase text-[#333333]">
+          <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold tracking-widest uppercase text-[#333333] shadow-sm">
             LEARNING MILESTONE REPORT
           </div>
           <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] leading-tight">
@@ -115,7 +113,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* --- Transformation (修复数据错乱与 <br> 问题) --- */}
+        {/* --- Transformation (横向长对比卡片) --- */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]">
@@ -129,7 +127,7 @@ export default function ReportView({ student }: { student: any }) {
               <div key={i} className="bg-white p-4 md:p-8 rounded-[24px] shadow-card grid grid-cols-1 md:grid-cols-10 items-center gap-6 border border-white hover:border-[#26B7FF]/10 transition-all group">
                 <div className="md:col-span-2 space-y-1">
                   <span className="text-[10px] font-bold text-[#26B7FF] uppercase tracking-[2px]">CATEGORY</span>
-                  <p className="text-xl font-bold text-[#333333]">{item.category}</p>
+                  <p className="text-xl font-bold text-[#333333]">{t(item.category, item.category === 'Vocabulary' ? 'المفردات' : item.category === 'Sentence Structure' ? 'بنية الجملة' : 'تدفق المحادثة')}</p>
                 </div>
                 
                 <div className="md:col-span-4 bg-[#F6F6F6] p-5 rounded-2xl space-y-1 shadow-inner border border-black/5">
@@ -146,9 +144,9 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* --- Gap Analysis (复刻深色背景版) --- */}
+        {/* --- Gap Analysis (深色背景版) --- */}
         <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl font-sans">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full -mr-40 -mt-40" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full -mr-40 -mt-40 opacity-50" />
           <div className="relative z-10 space-y-16">
             <div className={`space-y-4 max-w-2xl ${isRtl ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-center gap-4 text-[#FDE700] ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -178,7 +176,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* --- Roadmap --- */}
+        {/* --- Roadmap (复刻自 App.tsx) --- */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner">
@@ -188,15 +186,20 @@ export default function ReportView({ student }: { student: any }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {[
-              { en: "Phase 1: Foundation", ar: "المرحلة 1: التأسيس" },
-              { en: "Phase 2: Level Up", ar: "المرحلة 2: رفع المستوى" }
-            ].map((p, idx) => (
-              <div key={idx} className="bg-white p-8 md:p-12 rounded-[32px] shadow-card border-t-[10px] border-[#FDE700] space-y-8 group hover:-translate-y-2 transition-all">
-                <div className="space-y-2">
-                  <h3 className="text-[#26B7FF] font-bold uppercase tracking-[2px] text-xs">{t(p.en, p.ar)}</h3>
+            {[1, 2].map((phase) => (
+              <div key={phase} className="bg-white p-8 md:p-12 rounded-[32px] shadow-card border-t-[10px] border-[#FDE700] space-y-8 group hover:-translate-y-2 transition-all">
+                <div className="space-y-2 text-start">
+                  <h3 className="text-[#26B7FF] font-bold uppercase tracking-[2px] text-xs">PHASE {phase}</h3>
                   <p className="text-2xl md:text-3xl font-extrabold text-[#333333]">
-                    {idx === 0 ? t("Language Foundation", "التأسيس اللغوي") : t("Text Analysis", "تحليل النصوص")}
+                    {phase === 1 ? t("Language Foundation", "التأسيس اللغوي") : t("Text Analysis", "تحليل النصوص")}
+                  </p>
+                </div>
+                <div className="flex gap-4 text-start">
+                  <div className="w-6 h-6 bg-[#26B7FF]/10 rounded-full flex items-center justify-center shrink-0 mt-1">
+                    <CheckCircle2 className="text-[#26B7FF]" size={16} />
+                  </div>
+                  <p className="text-[#666666] text-lg leading-relaxed italic opacity-80">
+                    {phase === 1 ? t("Fixes sounds confusion and silent letters.", "يصلح الارتباك في الأصوات والحروف الصامتة.") : t("Attacks the comprehension gap using short stories.", "يهاجم فجوة الفهم باستخدام القصص القصيرة.")}
                   </p>
                 </div>
                 <button className="w-full py-4 rounded-full border-2 border-[#26B7FF] text-[#26B7FF] font-bold hover:bg-[#26B7FF] hover:text-white transition-all flex items-center justify-center gap-3">
@@ -209,7 +212,7 @@ export default function ReportView({ student }: { student: any }) {
         </section>
 
         {/* --- Footer Encouragement --- */}
-        <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
+        <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group font-sans">
           <div className="absolute top-0 left-0 w-full h-full bg-white/10 blur-[100px] rounded-full -ml-32 -mt-32" />
           <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl">
             <Sparkles size={40} className="text-[#FDE700]" />
@@ -223,6 +226,10 @@ export default function ReportView({ student }: { student: any }) {
         </section>
 
       </main>
+
+      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase font-sans">
+        © 2026 SS-Milestone-Report. All Rights Reserved.
+      </footer>
     </div>
   );
 }
