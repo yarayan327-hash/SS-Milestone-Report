@@ -9,11 +9,10 @@ import {
 
 export default function ReportView({ student }: { student: any }) {
   const [lang, setLang] = useState<'en' | 'ar'>('en');
-  const [activeModule, setActiveModule] = useState<number | null>(null); // 控制 Roadmap 按钮状态
-  const [showFullGap, setShowFullGap] = useState(false); // 控制 Gap Analysis 展开
+  const [activeModule, setActiveModule] = useState<number | null>(null); 
+  const [showFullGap, setShowFullGap] = useState(false); 
   const isRtl = lang === 'ar';
 
-  // 1. 结构化数据：穷尽所有案例并支持换行 (\n)
   const reportData = {
     executiveSummary: {
       en: "Congratulations on your fantastic progress during your first year of high school! 🎉 Continuing your studies consistently all the way to Ramadan shows the mindset of a highly successful student. You have transitioned beautifully to building full, impressive sentences.",
@@ -39,17 +38,30 @@ export default function ReportView({ student }: { student: any }) {
     gapAnalysis: [
       {
         title: { en: "Phonics & Pronunciation Trap", ar: "فخ النطق والصوتيات" },
-        desc: { en: "Struggling with vowel sounds, often confusing 'buy' with 'boy'. You also try to pronounce 'Silent Letters' like 'K' in know.", ar: "صعوبة في أصوات الحروف المتحركة ونطق الحروف الصامتة." }
+        desc: { 
+          en: "You are still struggling with vowel sounds, often confusing 'buy' with 'boy', or 'some' with a different sound. You also try to pronounce 'Silent Letters' (like the 'W' in write or 'K' in know).", 
+          ar: "لا تزال تعاني من أصوات الحروف المتحركة، وغالباً ما تخلط بين 'buy' و 'boy'. كما تحاول نطق 'الأحرف الصامتة' (مثل حرف W في write)." 
+        }
       },
       {
         title: { en: "The 'I Read But Don't Understand' Gap", ar: "فجوة 'أقرأ ولكن لا أفهم'" },
-        desc: { en: "Decoding word-by-word instead of contexts. By the end of a sentence, you forget the beginning.", ar: "فك التشفير كلمة بكلمة بدلاً من فهم السياق." }
+        desc: { 
+          en: "You decode English word-by-word. This means by the time you finish reading a sentence, you have forgotten the meaning of the beginning. You are reading letters, not contexts.", 
+          ar: "تقوم بفك تشفير اللغة الإنجليزية كلمة بكلمة. هذا يعني أنك بحلول الوقت الذي تنتهي فيه من قراءة الجملة، تكون قد نسيت معنى البداية." 
+        }
       },
       {
         title: { en: "Arabic Literal Translation", ar: "الترجمة الحرفية العربية" },
-        desc: { en: "Building sentences in Arabic first, causing 'Be' verb drops and slowing flow.", ar: "بناء الجمل بالعربية أولاً، مما يسبب سقوط فعل الكينونة." }
+        desc: { 
+          en: "When you speak, you build the sentence in Arabic first. This causes you to drop the 'Be' verb entirely (Copula drop) and severely slows down your ability to speak smoothly.", 
+          ar: "عندما تتحدث، تقوم ببناء الجملة باللغة العربية أولاً. يؤدي هذا إلى إسقاط فعل 'الكينونة' تماماً ويبطئ قدرتك على التحدث بسلاسة." 
+        }
       }
-    ]
+    ],
+    encouragement: {
+      en: `${student.name}, you have a brilliant language intuition—a rare gift! Trust your feelings, read the full story, and let's unlock your true speaking speed. I am incredibly proud of you!`,
+      ar: `${student.name}، أنت تمتلك حدساً لغوياً رائعاً—وهي موهبة نادرة! ثق بإحساسك، اقرأ القصة كاملة، ودعنا نطلق العنان لسرعتك الحقيقية في التحدث. أنا فخور بك جداً!`
+    }
   };
 
   const t = (obj: any) => obj[lang];
@@ -61,21 +73,23 @@ export default function ReportView({ student }: { student: any }) {
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5">
         <div className="max-w-[1140px] mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-all"><ArrowLeft className="w-6 h-6 text-[#26B7FF]" /></Link>
+            <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-all">
+              <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
+            </Link>
             <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
               <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg"><Trophy size={24} /></div>
               <span className="font-bold text-xl text-[#333333]">Milestone<span className="text-[#26B7FF]">Report</span></span>
             </div>
           </div>
-          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-[#26B7FF]/20">
+          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-[#26B7FF]/20 hover:scale-105 transition-transform active:scale-95">
              {isRtl ? 'English' : 'العربية'}
           </button>
         </div>
       </nav>
 
-      <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
+      <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24 pb-24">
         
-        {/* Hero Section */}
+        {/* 1. Hero Section */}
         <section className="text-center space-y-8">
           <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold uppercase text-[#333333]">LEARNING MILESTONE REPORT</div>
           <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] tracking-tight">{student.name}'s Milestone Report</h1>
@@ -88,7 +102,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 2. Transformation Section: 穷尽案例 + 换行展示 */}
+        {/* 2. Transformation Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]"><TrendingUp size={24} /></div>
@@ -101,7 +115,6 @@ export default function ReportView({ student }: { student: any }) {
                   <span className="text-[10px] font-bold text-[#26B7FF] uppercase tracking-[2px]">CATEGORY</span>
                   <p className="text-xl font-bold text-[#333333]">{t(item.category)}</p>
                 </div>
-                {/* 使用 whitespace-pre-line 实现换行 */}
                 <div className="md:col-span-4 bg-[#F6F6F6] p-6 rounded-2xl whitespace-pre-line text-[15px] text-[#666666] font-medium leading-relaxed">{t(item.start)}</div>
                 <div className="md:col-span-4 bg-[#26B7FF]/5 p-6 rounded-2xl whitespace-pre-line text-[15px] font-bold text-[#26B7FF] leading-relaxed">🚀 {t(item.now)}</div>
               </div>
@@ -109,11 +122,11 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 3. Gap Analysis: 点击 View Details 展开内容 */}
+        {/* 3. Gap Analysis */}
         <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full opacity-50" />
           <div className="relative z-10 space-y-16">
-            <div className="flex justify-between items-end gap-6 text-start">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 text-start">
               <div className="space-y-4 max-w-2xl">
                 <div className="flex items-center gap-4 text-[#FDE700]"><AlertCircle size={36} /><h2 className="text-3xl md:text-4xl font-bold">{isRtl ? 'تحليل الفجوة' : "The 'Gap' Analysis"}</h2></div>
                 <p className="text-white/60 text-lg md:text-xl leading-relaxed">{isRtl ? 'يظهر تحليلنا العميق فجوات محددة تعيق تقدمك.' : "Specific 'Gaps' are holding you back. If you pause now, your brain will revert to translation habits."}</p>
@@ -127,14 +140,15 @@ export default function ReportView({ student }: { student: any }) {
                 <div key={idx} className="space-y-6">
                   <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center font-bold text-[#FDE700] text-xl">0{idx + 1}</div>
                   <h3 className="text-xl font-bold text-white uppercase tracking-wide">{t(point.title)}</h3>
-                  {showFullGap && <p className="text-white/50 text-sm leading-relaxed animate-in fade-in slide-in-from-top-2">{t(point.desc)}</p>}
+                  {showFullGap && <p className="text-white/50 text-sm leading-relaxed animate-in fade-in slide-in-from-top-2 duration-500">{t(point.desc)}</p>}
+                  <div className="h-0.5 w-12 bg-[#FDE700]/30" />
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* 4. Roadmap Section: 恢复缺失内容 + 按钮点击响应 */}
+        {/* 4. Roadmap Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner"><Map size={24} /></div>
@@ -162,7 +176,26 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
+        {/* 5. Final Encouragement Section (新增模块：修复最后部分不显示) */}
+        <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-full bg-white/10 blur-[100px] rounded-full -ml-32 -mt-32 opacity-50" />
+          <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl group-hover:rotate-12 transition-transform duration-500">
+            <Sparkles size={40} className="text-[#FDE700]" />
+          </div>
+          <h2 className="text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic opacity-95">
+             "{t(reportData.encouragement)}"
+          </h2>
+          <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl shadow-black/20 transform hover:scale-105 transition-all cursor-default">
+            {isRtl ? 'تقدم ممتاز' : 'EXCELLENT PROGRESS'}
+          </div>
+        </section>
+
       </main>
+
+      {/* 底部版权栏 */}
+      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase">
+        © 2026 MilestoneReport. All Rights Reserved.
+      </footer>
     </div>
   );
 }
