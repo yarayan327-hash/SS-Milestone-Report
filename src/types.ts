@@ -1,45 +1,11 @@
-export type Language = 'en' | 'ar';
-
-export interface MilestoneData {
-  student: string;
-  level: string;
-  summary: string;
+export interface MilestoneReport {
+  studentName: string;
+  studentId: string;
+  executiveSummary: { en: string; ar: string; };
   transformation: {
-    title: string;
-    items: {
-      type: 'vocab' | 'grammar' | 'writing';
-      label: string;
-      summaryText: string;
-      details: string;
-    }[];
-  };
-  gapAnalysis: {
-    title: string;
-    summary: string;
-    items: {
-      label: string;
-      desc: string;
-      risk: string;
-      details: string;
-    }[];
-  };
-  roadmap: {
-    title: string;
-    phases: {
-      phase: string;
-      title: string;
-      desc: string;
-      visual: string;
-      details: string;
-    }[];
-  };
-  cta: string;
-  viewDetails: string;
-  hideDetails: string;
-}
-
-export interface StudentReport {
-  id: string;
-  en: MilestoneData;
-  ar: MilestoneData;
+    category: { en: string; ar: string };
+    start: { en: string; ar: string };
+    now: { en: string; ar: string };
+  }[];
+  encouragement: { en: string; ar: string; };
 }
