@@ -14,6 +14,7 @@ export default function ReportView({ student }: { student: any }) {
 
   const reportData = useMemo(() => {
     const raw = student?.reportContent || "";
+    // 基础清洗
     const content = raw.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
 
     const extract = (tag: string) => {
@@ -23,7 +24,7 @@ export default function ReportView({ student }: { student: any }) {
 
     // 1. Summary
     const summaryRaw = extract("SUMMARY");
-    let summary = "⚠️ [SUMMARY] 标签未在数据库中找到。请检查文案格式。";
+    let summary = "⚠️ [SUMMARY] Not Found.";
     if (summaryRaw) {
       const arIndex = summaryRaw.search(/عزيزي/);
       summary = arIndex !== -1 
@@ -31,20 +32,24 @@ export default function ReportView({ student }: { student: any }) {
         : summaryRaw;
     }
 
-    // 2. Transformation
+    // 2. Transformation (防换行干扰版)
     const transRaw = extract("TRANSFORMATION");
     let transformation: any[] = [];
     if (transRaw) {
       transformation = transRaw.split(/Category:/i).filter(Boolean).map((block: string) => {
-        const lines = block.trim().split('\n').map((l: string) => l.trim()).filter(Boolean);
-        const beforeLine = lines.find((l: string) => l.startsWith('Before:')) || "";
-        const afterLine = lines.find((l: string) => l.startsWith('After:')) || "";
+        // 利用正则跨行匹配 Before 和 After，无视用户乱按的回车
+        const beforeMatch = block.match(/Before:\s*(.*?)(?=After:|$)/is);
+        const afterMatch = block.match(/After:\s*(.*)/is);
+        const catMatch = block.match(/^(.*?)(?=Before:)/is);
         
-        const bParts = beforeLine.replace('Before:', '').split('|').map((s: string) => s.trim());
-        const aParts = afterLine.replace('After:', '').split('|').map((s: string) => s.trim());
+        const beforeText = beforeMatch ? beforeMatch[1].replace(/[\n\r]+/g, ' ').trim() : "";
+        const afterText = afterMatch ? afterMatch[1].replace(/[\n\r]+/g, ' ').trim() : "";
+        
+        const bParts = beforeText.split('|').map((s: string) => s.trim());
+        const aParts = afterText.split('|').map((s: string) => s.trim());
 
         return {
-          category: lines[0] || "Unknown",
+          category: catMatch ? catMatch[1].trim() : "Learning",
           beforeTitle: bParts[0] || "",
           beforeSub: bParts[1] || "",
           afterTitle: aParts[0] || "",
@@ -53,22 +58,28 @@ export default function ReportView({ student }: { student: any }) {
       });
     }
 
-    // 3. Gap
+    // 3. Gap (防换行干扰版)
     const gapRaw = extract("GAP");
     let gaps: any[] = [];
     if (gapRaw) {
-      gaps = gapRaw.split('\n').filter((l: string) => l.includes('|')).map((line: string) => {
-        const p = line.split('|').map((s: string) => s.trim());
-        return { id: p[0], title: p[1], desc: p[2] };
+      // 按照 "01 |" 这样的规律分割，然后强制合并块内回车
+      const gapBlocks = gapRaw.split(/(?=\d{2}\s*\|)/).filter((b: string) => b.trim());
+      gaps = gapBlocks.map((block: string) => {
+        const singleLineBlock = block.replace(/[\n\r]+/g, ' ');
+        const p = singleLineBlock.split('|').map((s: string) => s.trim());
+        return { id: p[0] || "", title: p[1] || "", desc: p[2] || "" };
       });
     }
 
-    // 4. Roadmap
+    // 4. Roadmap (防换行干扰版 - 解决您的内容缺失问题)
     const roadmapRaw = extract("ROADMAP");
     let phases: any[] = [];
     if (roadmapRaw) {
-      phases = roadmapRaw.split('\n').filter((l: string) => l.includes('|')).map((line: string) => {
-        const p = line.split('|').map((s: string) => s.trim());
+      // 按照 "Phase 1" 这样的关键词分割阶段，然后把内部的回车全部抹平
+      const phaseBlocks = roadmapRaw.split(/(?=Phase\s*\d)/i).filter((b: string) => b.trim());
+      phases = phaseBlocks.map((block: string) => {
+        const singleLineBlock = block.replace(/[\n\r]+/g, ' '); // 核心修复：把所有误按的回车替换为空格
+        const p = singleLineBlock.split('|').map((s: string) => s.trim());
         return { 
           phaseNum: p[0] || "", 
           phaseName: p[1] || "", 
@@ -80,7 +91,7 @@ export default function ReportView({ student }: { student: any }) {
 
     // 5. Encouragement
     const encRaw = extract("ENCOURAGEMENT");
-    let encouragement = "⚠️ [ENCOURAGEMENT] 标签未找到";
+    let encouragement = "Unlock your true speaking speed!";
     if (encRaw) {
       const encArIdx = encRaw.search(/زياد|عزيزي|أشواق/);
       encouragement = encArIdx !== -1 
@@ -142,7 +153,7 @@ export default function ReportView({ student }: { student: any }) {
           
           {reportData.transformation.length === 0 ? (
             <div className="bg-white p-8 rounded-[24px] shadow-sm border border-red-200 text-red-500 font-bold text-center">
-              ⚠️ 无法显示数据：数据库中缺少 [TRANSFORMATION] 标签或格式错误。
+              ⚠️ [TRANSFORMATION] 标签数据丢失或格式不符。
             </div>
           ) : (
             <div className="grid gap-6">
@@ -183,7 +194,7 @@ export default function ReportView({ student }: { student: any }) {
             </div>
             
             {reportData.gaps.length === 0 ? (
-               <div className="text-red-400 font-bold">⚠️ 无法显示数据：缺少 [GAP] 标签。</div>
+               <div className="text-red-400 font-bold">⚠️ [GAP] 标签数据丢失。</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-start">
                 {reportData.gaps.map((gap: any, idx: number) => (
@@ -207,7 +218,7 @@ export default function ReportView({ student }: { student: any }) {
           
           {reportData.phases.length === 0 ? (
             <div className="bg-white p-8 rounded-[24px] shadow-sm border border-red-200 text-red-500 font-bold text-center">
-              ⚠️ 无法显示数据：缺少 [ROADMAP] 标签或格式错误。
+              ⚠️ [ROADMAP] 标签数据丢失或格式不符。
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-start">
@@ -239,7 +250,7 @@ export default function ReportView({ student }: { student: any }) {
           <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl group-hover:rotate-12 transition-transform duration-500">
             <Sparkles size={40} className="text-[#FDE700]" />
           </div>
-          <h2 className={`text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic ${reportData.encouragement.includes('⚠️') ? 'text-red-200' : 'opacity-95'}`}>
+          <h2 className="text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic opacity-95">
              "{reportData.encouragement}"
           </h2>
           <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
@@ -247,6 +258,10 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
       </main>
+
+      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase">
+        © 2026 MilestoneReport. All Rights Reserved.
+      </footer>
     </div>
   );
 }
