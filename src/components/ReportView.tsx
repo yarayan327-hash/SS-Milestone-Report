@@ -14,6 +14,7 @@ export default function ReportView({ student }: { student: any }) {
 
   const reportData = useMemo(() => {
     const raw = student?.reportContent || "";
+    // 基础清洗
     const content = raw.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
 
     const extract = (tag: string) => {
@@ -21,20 +22,22 @@ export default function ReportView({ student }: { student: any }) {
       return content.match(regex)?.[1]?.trim() || "";
     };
 
-    // 1. Summary: 寻找阿拉伯语关键字切割，修复语言混合
+    // 1. Summary: 精准切割英阿内容
     const summaryRaw = extract("SUMMARY");
-    const arIndex = summaryRaw.search(/عزيزي/);
+    const arIndex = summaryRaw.indexOf("عزيزي");
     const summary = arIndex !== -1 
       ? (isRtl ? summaryRaw.substring(arIndex) : summaryRaw.substring(0, arIndex))
       : summaryRaw;
 
-    // 2. Transformation: 匹配类别和案例
-    const transformation = extract("TRANSFORMATION").split(/Category:/i).filter(Boolean).map((block) => {
-      const lines = block.trim().split('\n').map(l => l.trim());
-      const beforeLine = lines.find(l => l.startsWith('Before:')) || "";
-      const afterLine = lines.find(l => l.startsWith('After:')) || "";
-      const bParts = beforeLine.replace('Before:', '').split('|').map(s => s.trim());
-      const aParts = afterLine.replace('After:', '').split('|').map(s => s.trim());
+    // 2. Transformation: 显式定义类型修复编译错误
+    const transformation = extract("TRANSFORMATION").split(/Category:/i).filter(Boolean).map((block: string) => {
+      const lines = block.trim().split('\n').map((l: string) => l.trim());
+      const beforeLine = lines.find((l: string) => l.startsWith('Before:')) || "";
+      const afterLine = lines.find((l: string) => l.startsWith('After:')) || "";
+      
+      const bParts = beforeLine.replace('Before:', '').split('|').map((s: string) => s.trim());
+      const aParts = afterLine.replace('After:', '').split('|').map((s: string) => s.trim());
+
       return {
         category: lines[0] || "Learning",
         beforeTitle: bParts[0] || "",
@@ -44,15 +47,15 @@ export default function ReportView({ student }: { student: any }) {
       };
     });
 
-    // 3. Gap: 提取 01/02/03
-    const gaps = extract("GAP").split('\n').filter(l => l.includes('|')).map(line => {
-      const p = line.split('|').map(s => s.trim());
+    // 3. Gap: 提取详细描述
+    const gaps = extract("GAP").split('\n').filter((l: string) => l.includes('|')).map((line: string) => {
+      const p = line.split('|').map((s: string) => s.trim());
       return { id: p[0], title: p[1], desc: p[2] };
     });
 
-    // 4. Roadmap: 修复内容缺失，严格映射四个字段
-    const phases = extract("ROADMAP").split('\n').filter(l => l.includes('|')).map(line => {
-      const p = line.split('|').map(s => s.trim());
+    // 4. Roadmap: 修复 Phase/Module 内容缺失
+    const phases = extract("ROADMAP").split('\n').filter((l: string) => l.includes('|')).map((line: string) => {
+      const p = line.split('|').map((s: string) => s.trim());
       return { 
         phaseNum: p[0] || "", 
         phaseName: p[1] || "", 
@@ -63,7 +66,7 @@ export default function ReportView({ student }: { student: any }) {
 
     // 5. Encouragement: 语言隔离
     const encRaw = extract("ENCOURAGEMENT");
-    const encArIdx = encRaw.search(/زياد|عزيزي/);
+    const encArIdx = encRaw.indexOf("زياد");
     const encouragement = encArIdx !== -1 
       ? (isRtl ? encRaw.substring(encArIdx) : encRaw.substring(0, encArIdx))
       : encRaw;
@@ -79,21 +82,23 @@ export default function ReportView({ student }: { student: any }) {
         <div className="max-w-[1140px] mx-auto px-6 w-full flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="p-2 hover:bg-gray-100 rounded-full">
-              <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
+               <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
             <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
-              <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg"><Trophy size={24} /></div>
+              <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#26B7FF]/20">
+                <Trophy size={24} />
+              </div>
               <span className="font-bold text-xl text-[#333333]">Milestone<span className="text-[#26B7FF]">Report</span></span>
             </div>
           </div>
-          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg hover:scale-105 transition-all">
-            {isRtl ? 'English' : 'العربية'}
+          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-[#26B7FF]/20 hover:scale-105 transition-all">
+             {isRtl ? 'English' : 'العربية'}
           </button>
         </div>
       </nav>
 
       <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
-        {/* 1. Summary Section */}
+        {/* Summary Card */}
         <section className="text-center space-y-8">
           <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold uppercase text-[#333333]">LEARNING MILESTONE REPORT</div>
           <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] leading-tight">{student.name}'s Milestone Report</h1>
@@ -106,15 +111,15 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 2. Transformation Section */}
+        {/* Transformation Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]"><TrendingUp size={24} /></div>
             <h2 className="text-[28px] font-bold text-[#333333]">{t("The Transformation", "التحول")}</h2>
           </div>
           <div className="grid gap-6">
-            {reportData.transformation.map((item, i) => (
-              <div key={i} className="bg-white p-8 rounded-[24px] shadow-sm grid grid-cols-1 md:grid-cols-10 items-center gap-6 border border-white hover:border-[#26B7FF]/20 transition-all">
+            {reportData.transformation.map((item: any, i: number) => (
+              <div key={i} className="bg-white p-8 rounded-[24px] shadow-sm grid grid-cols-1 md:grid-cols-10 items-center gap-6 border border-white transition-all hover:border-[#26B7FF]/20">
                 <div className="md:col-span-2 space-y-1">
                   <span className="text-[10px] font-bold text-[#26B7FF] uppercase tracking-[2px]">CATEGORY</span>
                   <p className="text-xl font-bold text-[#333333]">{item.category}</p>
@@ -134,7 +139,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 3. Gap Analysis Section */}
+        {/* Gap Analysis Section */}
         <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full opacity-50" />
           <div className="relative z-10 space-y-16">
@@ -148,7 +153,7 @@ export default function ReportView({ student }: { student: any }) {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-start">
-              {reportData.gaps.map((gap, idx) => (
+              {reportData.gaps.map((gap: any, idx: number) => (
                 <div key={idx} className="space-y-6 group">
                   <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center font-bold text-[#FDE700] text-xl">0{gap.id}</div>
                   <h3 className="text-xl font-bold text-white uppercase tracking-wide">{gap.title}</h3>
@@ -159,14 +164,14 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 4. Roadmap Section */}
+        {/* Roadmap Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner"><Map size={24} /></div>
             <h2 className="text-[28px] font-bold text-[#333333]">{t("Custom Learning Roadmap", "خارطة الطريق التعليمية المخصصة")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-start">
-            {reportData.phases.map((p, idx) => (
+            {reportData.phases.map((p: any, idx: number) => (
               <div key={idx} className="bg-white p-8 md:p-12 rounded-[32px] shadow-sm border-t-[10px] border-[#FDE700] space-y-8">
                 <div className="space-y-2">
                   <h3 className="text-[#26B7FF] font-bold uppercase tracking-[2px] text-xs">{p.phaseNum}</h3>
@@ -187,14 +192,14 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 5. Branding Footer */}
+        {/* Footer Card */}
         <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-full bg-white/10 blur-[100px] rounded-full -ml-32 -mt-32 opacity-50" />
           <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl group-hover:rotate-12 transition-transform duration-500">
             <Sparkles size={40} className="text-[#FDE700]" />
           </div>
           <h2 className="text-2xl md:text-[32px] font-bold max-w-3xl mx-auto leading-relaxed italic opacity-95">
-             "{reportData.encouragement || "Unlock your true speaking speed!"}"
+             "{reportData.encouragement || "Unlock your potential!"}"
           </h2>
           <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
             {t("Excellent Progress", "إنجاز متميز")}
