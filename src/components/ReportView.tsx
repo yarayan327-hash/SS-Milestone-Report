@@ -7,28 +7,13 @@ import {
   AlertCircle, Map, ChevronRight, CheckCircle2 
 } from 'lucide-react';
 
-// 定义解析后的数据接口，防止 TS 报错
-interface ParsedData {
-  summary: string;
-  transformation: Array<{
-    category: string;
-    beforeTitle: string;
-    beforeSub: string;
-    afterTitle: string;
-    afterSub: string;
-  }>;
-  gaps: Array<{ id: string; title: string; desc: string; }>;
-  phases: Array<{ phase: string; name: string; module: string; why: string; }>;
-  encouragement: string;
-}
-
 export default function ReportView({ student }: { student: any }) {
   const [lang, setLang] = useState<'en' | 'ar'>('en');
   const [showFullGap, setShowFullGap] = useState(false);
   const isRtl = lang === 'ar';
 
-  // --- 智能解析引擎 (显式类型定义版) ---
-  const reportData = useMemo<ParsedData>(() => {
+  // --- 增强版分段解析引擎 ---
+  const reportData = useMemo(() => {
     const content = student?.reportContent || "";
     
     const extractSection = (tag: string) => {
@@ -36,91 +21,101 @@ export default function ReportView({ student }: { student: any }) {
       return content.match(regex)?.[1]?.trim() || "";
     };
 
-    // 解析 Transformation 部分
+    // 1. 解析 Summary 并根据语言分离内容
+    const summaryRaw = extractSection("SUMMARY");
+    const summaryParts = summaryRaw.split(/\n(?=عزيزي)/); // 以阿拉伯语问候语为界分割
+    const summary = isRtl ? (summaryParts[1] || summaryParts[0]) : summaryParts[0];
+
+    // 2. 解析 Transformation
     const transRaw = extractSection("TRANSFORMATION");
     const transformation = transRaw.split(/Category:/i).filter(Boolean).map((block: string) => {
       const lines = block.trim().split('\n');
       const cat = lines[0].trim();
-      const beforePart = lines.find((l: string) => l.startsWith('Before:'))?.replace('Before:', '').split('|') || [];
-      const afterPart = lines.find((l: string) => l.startsWith('After:'))?.replace('After:', '').split('|') || [];
+      const beforeLine = lines.find((l: string) => l.startsWith('Before:'))?.replace('Before:', '') || "";
+      const afterLine = lines.find((l: string) => l.startsWith('After:'))?.replace('After:', '') || "";
+      
+      const [bTitle, bSub] = beforeLine.split('|').map(s => s.trim());
+      const [aTitle, aSub] = afterLine.split('|').map(s => s.trim());
+
       return {
         category: cat,
-        beforeTitle: beforePart[0]?.trim() || "",
-        beforeSub: beforePart[1]?.trim() || "",
-        afterTitle: afterPart[0]?.trim() || "",
-        afterSub: afterPart[1]?.trim() || "",
+        beforeTitle: bTitle || "",
+        beforeSub: bSub || "",
+        afterTitle: aTitle || "",
+        afterSub: aSub || "",
       };
     });
 
-    // 解析 Gap 部分
-    const gapRaw = extractSection("GAP");
-    const gaps = gapRaw.split('\n').filter(Boolean).map((line: string) => {
-      const parts = line.split('|').map((s: string) => s.trim());
-      return { id: parts[0] || "", title: parts[1] || "", desc: parts[2] || "" };
+    // 3. 解析 Gap
+    const gaps = extractSection("GAP").split('\n').filter(Boolean).map((line: string) => {
+      const parts = line.split('|').map(s => s.trim());
+      return { id: parts[0], title: parts[1], desc: parts[2] };
     });
 
-    // 解析 Roadmap 部分
+    // 4. 解析 Roadmap
     const roadmapRaw = extractSection("ROADMAP");
     const phases = roadmapRaw.split('\n').filter(Boolean).map((line: string) => {
-      const parts = line.split('|').map((s: string) => s.trim());
-      return { phase: parts[0] || "", name: parts[1] || "", module: parts[2] || "", why: parts[3] || "" };
+      const parts = line.split('|').map(s => s.trim());
+      // 适配格式: Phase | Name | Module | Why
+      return { 
+        phase: parts[0], 
+        name: parts[1], 
+        module: parts[2], 
+        why: parts[3] 
+      };
     });
 
-    return {
-      summary: extractSection("SUMMARY"),
-      transformation,
-      gaps,
-      phases,
-      encouragement: extractSection("ENCOURAGEMENT")
-    };
-  }, [student?.reportContent]);
+    // 5. 解析 Encouragement 并分离语言
+    const encRaw = extractSection("ENCOURAGEMENT");
+    const encParts = encRaw.split(/\n(?=زياد)/); 
+    const encouragement = isRtl ? (encParts[1] || encParts[0]) : encParts[0];
+
+    return { summary, transformation, gaps, phases, encouragement };
+  }, [student?.reportContent, isRtl]);
 
   const t = (en: string, ar: string) => isRtl ? ar : en;
 
   return (
-    <div className={`min-h-screen bg-[#F6F6F6] ${isRtl ? 'rtl text-right font-arabic' : 'text-left font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* 顶部导航栏 */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5 font-sans">
+    <div className={`min-h-screen bg-[#F6F6F6] ${isRtl ? 'rtl text-right' : 'text-left font-sans'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5">
         <div className="max-w-[1140px] mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 hover:bg-gray-100 rounded-full transition-all">
+            <Link href="/" className="p-2 hover:bg-gray-100 rounded-full">
                <ArrowLeft className={`w-6 h-6 text-[#26B7FF] ${isRtl ? 'rotate-180' : ''}`} />
             </Link>
-            <div className="flex items-center gap-3 border-s ps-4 border-gray-100">
+            <div className="flex items-center gap-3 border-s ps-4 border-gray-100 font-sans">
               <div className="w-10 h-10 bg-[#26B7FF] rounded-xl flex items-center justify-center text-white shadow-lg">
                 <Trophy size={24} />
               </div>
-              <div>
-                <span className="font-bold text-lg block leading-tight text-[#333333]">{student.name}</span>
-                <span className="text-xs text-[#666666] font-medium tracking-tight">ID: {student.studentId}</span>
-              </div>
+              <span className="font-bold text-xl text-[#333333]">Milestone<span className="text-[#26B7FF]">Report</span></span>
             </div>
           </div>
-          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-[#26B7FF]/20 hover:scale-105 transition-all">
+          <button onClick={() => setLang(lang === 'en' ? 'ar' : 'en')} className="bg-[#26B7FF] text-white px-6 py-2.5 rounded-full font-bold shadow-lg">
              {isRtl ? 'English' : 'العربية'}
           </button>
         </div>
       </nav>
 
       <main className="max-w-[1140px] mx-auto px-6 py-16 space-y-24">
-        {/* 1. Hero Summary Section */}
+        {/* Header Section */}
         <section className="text-center space-y-8">
-          <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold uppercase text-[#333333] shadow-sm">LEARNING MILESTONE REPORT</div>
-          <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333] tracking-tight">{student.name}{isRtl ? ' تقرير إنجاز' : "'s Milestone Report"}</h1>
+          <div className="inline-block px-4 py-1.5 bg-[#FDE700] rounded-full text-[12px] font-bold uppercase text-[#333333]">LEARNING MILESTONE REPORT</div>
+          <h1 className="text-[36px] md:text-[48px] font-extrabold text-[#333333]">{student.name}{isRtl ? ' تقرير إنجاز' : "'s Milestone Report"}</h1>
           <div className="max-w-4xl mx-auto bg-white p-10 rounded-[32px] shadow-sm border border-gray-100 relative overflow-hidden text-start">
              <div className="flex items-start gap-6 relative z-10">
                 <Sparkles className="text-[#FDE700] shrink-0 mt-1" size={32} />
-                <p className="text-xl md:text-2xl text-[#666666] leading-relaxed font-medium italic opacity-95">"{reportData.summary}"</p>
+                <p className="text-xl md:text-2xl text-[#666666] leading-relaxed font-medium italic">"{reportData.summary}"</p>
              </div>
              <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-blue-50/50 rounded-full" />
           </div>
         </section>
 
-        {/* 2. Transformation Section (修复 item 隐式类型报错) */}
+        {/* Transformation Section */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#26B7FF]/10 rounded-2xl flex items-center justify-center text-[#26B7FF]"><TrendingUp size={24} /></div>
-            <h2 className="text-[28px] font-bold text-[#333333]">{t("The Transformation: Before & After", "التحول: قبل وبعد")}</h2>
+            <h2 className="text-[28px] font-bold text-[#333333]">{t("The Transformation", "التحول")}</h2>
           </div>
           <div className="grid gap-6">
             {reportData.transformation.map((item: any, i: number) => (
@@ -144,14 +139,14 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 3. Gap Analysis Section (修复 gap 隐式类型报错) */}
+        {/* Gap Analysis Section */}
         <section className="bg-[#282828] text-white rounded-[40px] p-8 md:p-20 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#26B7FF]/20 blur-[120px] rounded-full opacity-50" />
           <div className="relative z-10 space-y-16">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 text-start">
               <div className="space-y-4 max-w-2xl">
                 <div className="flex items-center gap-4 text-[#FDE700]"><AlertCircle size={36} /><h2 className="text-3xl md:text-4xl font-bold">{t("The 'Gap' Analysis", "تحليل الفجوة")}</h2></div>
-                <p className="text-white/60 text-lg md:text-xl font-medium leading-relaxed opacity-80">{t("Our deep analysis shows specific 'Gaps' holding you back.", "يظهر تحليلنا العميق فجوات محددة تعيق تقدمك.")}</p>
+                <p className="text-white/60 text-lg md:text-xl leading-relaxed opacity-80">{t("Our deep analysis shows specific 'Gaps' holding you back.", "يظهر تحليلنا العميق فجوات محددة تعيق تقدمك.")}</p>
               </div>
               <button onClick={() => setShowFullGap(!showFullGap)} className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full text-sm font-bold transition-all border border-white/10 shrink-0">
                 {showFullGap ? t("Show Less", "عرض أقل") : t("Show Details", "عرض التفاصيل")}
@@ -170,11 +165,11 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 4. Roadmap Section (修复 p 隐式类型报错) */}
+        {/* Roadmap Section - 恢复 Roadmap 显示 */}
         <section className="space-y-12">
           <div className="flex items-center gap-4 px-2">
             <div className="w-12 h-12 bg-[#FDE700]/10 rounded-2xl flex items-center justify-center text-[#333333] border border-[#FDE700]/20 shadow-inner"><Map size={24} /></div>
-            <h2 className="text-[28px] font-bold text-[#333333]">{t("Custom Learning Roadmap", "خارطة الطريق التعليمية")}</h2>
+            <h2 className="text-[28px] font-bold text-[#333333]">{t("Custom Learning Roadmap", "خارطة الطريق التعليمية المخصصة")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-start">
             {reportData.phases.map((p: any, idx: number) => (
@@ -198,7 +193,7 @@ export default function ReportView({ student }: { student: any }) {
           </div>
         </section>
 
-        {/* 5. Encouragement Section */}
+        {/* Footer Section */}
         <section className="text-center p-12 md:p-24 bg-[#26B7FF] rounded-[48px] text-white space-y-10 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-full bg-white/10 blur-[100px] rounded-full -ml-32 -mt-32 opacity-50" />
           <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto shadow-xl">
@@ -208,12 +203,12 @@ export default function ReportView({ student }: { student: any }) {
              "{reportData.encouragement}"
           </h2>
           <div className="inline-block px-12 py-4 bg-[#FDE700] text-[#333333] rounded-full font-black text-lg shadow-2xl shadow-black/20 transform hover:scale-105 transition-all uppercase tracking-widest cursor-default">
-            {t("Excellent Progress", "تقدم ممتاز")}
+            {t("Verified Achievement", "إنجاز معتمد")}
           </div>
         </section>
       </main>
 
-      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase font-sans">
+      <footer className="bg-white border-t border-black/5 py-12 text-center text-sm font-bold text-[#666666] tracking-[1px] uppercase">
         © 2026 MilestoneReport. All Rights Reserved.
       </footer>
     </div>
