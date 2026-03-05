@@ -98,7 +98,7 @@ export default async function ReportDetailPage({ params }: { params: { id: strin
           <div>
             <h3 className="text-xl font-bold mb-2">Upcoming Roadmap</h3>
             <p className="text-[#666666] leading-relaxed">
-              Phase 1: Foundation Repair (Sessions 1-8). We will focus exclusively on Advanced Phonics Rules to eliminate the buy/boy confusion.
+              Phase 1: Foundation Repair (Sessions 1-8). We will focus exclusively on Advanced Phonics Rules to eliminate specific phonetic confusions.
             </p>
           </div>
         </section>
